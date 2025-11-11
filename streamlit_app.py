@@ -46,16 +46,20 @@ for ticker in tickers:
         continue
 
     # Load old historical data
+    st.write(ticker)
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
     # Fetch recent data
     df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
     df_new.reset_index(inplace=True)
+    st.write(ticker, df_new.shape)
+
 
     # Combine
     df_new = df_new.rename(columns={"Date": "Date"})
     df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
+    st.write(ticker, df_all.shape)
 
     # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
@@ -74,6 +78,7 @@ for ticker in tickers:
         f"Highest ({n_option})": round(highest_price, 2),
         f"Drop % ({n_option})": round(drop_pct, 2)
     })
+    st.write(results)
 
 if results:
     df_results = pd.DataFrame(results)
