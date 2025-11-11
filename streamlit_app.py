@@ -32,6 +32,13 @@ cap_choice = st.selectbox(
     ["All", "Mega-cap (> $200B)", "Large-cap ($10B–$200B)", "Mid-cap ($2B–$10B)", "Small-cap ($300M–$2B)"]
 )
 
+# --- Lookback period selection ---
+n_option = st.selectbox(
+    "Select lookback period",
+    ["1 Week", "1 Month", "6 Months", "1 Year"]
+)
+n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
+
 # --- Run button ---
 if st.button("Run Stock Drop Analysis"):
     # --- Load ticker info ---
@@ -52,19 +59,12 @@ if st.button("Run Stock Drop Analysis"):
         st.info("No tickers match the selected filters.")
         st.stop()
 
-    # --- Lookback period selection ---
-    n_option = st.selectbox(
-        "Select lookback period",
-        ["1 Week", "1 Month", "6 Months", "1 Year"]
-    )
-
-    n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
-
     # --- Folder for CSV files ---
     csv_folder = "Stock_data"
 
     # --- Prepare tickers list ---
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
+    st.write(tickers)
 
     if not tickers:
         st.warning("No tickers found in selected sheet.")
