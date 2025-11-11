@@ -31,7 +31,7 @@ else:
 tickers = ["XIC.TO", 
          "XLU"]
 tickers = ["SPY", "QQQ", "XIC.TO", 
-                "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"]
+                "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLRE", "XLU"]
 
 today = datetime.today().date()
 start_date = datetime(2025, 11, 2).date()  # day after your last data
