@@ -6,38 +6,74 @@ from datetime import datetime, timedelta
 
 st.title("📉 Stock Drop Tracker")
 
-# --- User inputs ---
-# excel_file = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada') 
-# st.file_uploader("Upload Excel file with 'Ticker' column", type=["xlsx"])
-csv_folder = "Stock_data"  # st.text_input("Enter folder path where your CSV files are stored")
 
+# --- User inputs ---
+st.markdown("### Step 1: Choose Market and Market Cap Filters")
+
+# File and sheet selection
+excel_file = "Tickers_Info.xlsx"
+market_choice = st.radio("Select Market:", ["Canada", "US"], horizontal=True)
+
+# Market cap filters
+def filter_market_cap(df, cap_choice):
+    if cap_choice == "Mega-cap (> $200B)":
+        return df[df['MarketCap'] > 200]
+    elif cap_choice == "Large-cap ($10B–$200B)":
+        return df[(df['MarketCap'] >= 10) & (df['MarketCap'] <= 200)]
+    elif cap_choice == "Mid-cap ($2B–$10B)":
+        return df[(df['MarketCap'] >= 2) & (df['MarketCap'] < 10)]
+    elif cap_choice == "Small-cap ($300M–$2B)":
+        return df[(df['MarketCap'] >= 0.3) & (df['MarketCap'] < 2)]
+    else:
+        return df
+
+cap_choice = st.selectbox(
+    "Select Market Cap Range",
+    ["All", "Mega-cap (> $200B)", "Large-cap ($10B–$200B)", "Mid-cap ($2B–$10B)", "Small-cap ($300M–$2B)"]
+)
+
+# --- Load ticker info ---
+try:
+    tickers_info = pd.read_excel(excel_file, sheet_name=market_choice)
+except Exception as e:
+    st.error(f"Error reading Excel file: {e}")
+    st.stop()
+
+# Filter by market cap
+if 'MarketCap' not in tickers_info.columns:
+    st.warning("Excel file must contain a 'MarketCap' column.")
+else:
+    tickers_info = filter_market_cap(tickers_info, cap_choice)
+
+if tickers_info.empty:
+    st.info("No tickers match the selected filters.")
+    st.stop()
+
+# --- Lookback period selection ---
 n_option = st.selectbox(
     "Select lookback period",
     ["1 Week", "1 Month", "6 Months", "1 Year"]
 )
 
-if n_option == "1 Week":
-    n_days = 7
-elif n_option == "1 Month":
-    n_days = 30
-elif n_option == "6 Months":
-    n_days = 180
-else:
-    n_days = 365
+n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
 
-# if excel_file and csv_folder:
-tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
+# --- Folder for CSV files ---
+csv_folder = "Stock_data"
+
+# --- Prepare tickers list ---
 tickers = tickers_info["Ticker"].dropna().unique().tolist()
-st.write(tickers)
-tickers = ["SPY", "QQQ", "XIC.TO", "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
 
-today = datetime.today().date()
-start_date = datetime(2025, 11, 2).date()  # day after your last data
+if not tickers:
+    st.warning("No tickers found in selected sheet.")
+    st.stop()
+
+st.markdown(f"### Step 2: Fetching Data ({market_choice} Market) since {start_date} ...")
+
+# tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
+# tickers = tickers_info["Ticker"].dropna().unique().tolist()
+# tickers = ["SPY", "QQQ", "XIC.TO", "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
 
 results = []
-
-st.write(f"Fetching latest data since {start_date} ...")
-
 progress_bar = st.progress(0)
 status_text = st.empty()
 
@@ -76,7 +112,7 @@ for i, ticker in enumerate(tickers, start=1):
         continue
 
     current_price = df_window.iloc[-1]["Close"]
-    highest_price = df_window["High"].max()
+    highest_price = df_window["Close"].max()
     drop_pct = (current_price - highest_price) / highest_price * 100
 
     results.append({
