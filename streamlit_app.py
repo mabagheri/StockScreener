@@ -28,8 +28,8 @@ else:
 # if excel_file and csv_folder:
 # tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 # tickers = tickers_info["Ticker"].dropna().unique().tolist()
-tickers =  ["XIC.TO", 
-             "XLU"]
+tickers = ["SPY", "QQQ", "XIC.TO", 
+            "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"]
 
 today = datetime.today().date()
 start_date = datetime(2025, 11, 2).date()  # day after your last data
@@ -62,7 +62,7 @@ for i, ticker in enumerate(tickers, start=1):
     
     # Combine
     df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
-    st.write(ticker, df_all.head(10))
+    # st.write(ticker, df_all.head(10))
 
     # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
