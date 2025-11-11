@@ -28,10 +28,7 @@ else:
 # if excel_file and csv_folder:
 # tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 # tickers = tickers_info["Ticker"].dropna().unique().tolist()
-tickers = ["XIC.TO", 
-         "XLU"]
-tickers = ["SPY", "QQQ", "XIC.TO", 
-                "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
+tickers = ["SPY", "QQQ", "XIC.TO", "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
 
 today = datetime.today().date()
 start_date = datetime(2025, 11, 2).date()  # day after your last data
@@ -51,7 +48,6 @@ for i, ticker in enumerate(tickers, start=1):
         continue
 
     # Load old historical data
-    st.write(ticker)
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
     # st.write(ticker, df_old.shape, df_old.head(3))
