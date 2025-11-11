@@ -51,15 +51,21 @@ for ticker in tickers:
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
     # Fetch recent data
+    status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
     df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-    df_new.reset_index(inplace=True)
-    st.write(ticker, df_new.shape)
+
+    df_new = df_new.iloc[:, :].reset_index(drop=False)
+    df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+    
+    # df_new.reset_index(inplace=True)
+    st.write("df_new", df_new.head(4))
+    st.write("df_old", df_old.head(4))
 
 
     # Combine
-    df_new = df_new.rename(columns={"Date": "Date"})
+    # df_new = df_new.rename(columns={"Date": "Date"})
     df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
-    st.write(ticker, df_all.shape)
+    st.write(ticker, df_all.head(10))
 
     # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
