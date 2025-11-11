@@ -70,7 +70,7 @@ if not tickers:
 results = []
 today = datetime.today().date()
 start_date = datetime(2025, 11, 2).date()
-st.markdown(f"### Step 2: Fetching Data ({market_choice} Market) since {start_date} ...")
+st.markdown(f"### Step 2: Fetching Data ({market_choice} Market) since {start_date}")
 
 # tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 # tickers = tickers_info["Ticker"].dropna().unique().tolist()
@@ -81,7 +81,7 @@ for i, ticker in enumerate(tickers, start=1):
     
     csv_path = os.path.join(csv_folder, f"{ticker}.csv")
     if not os.path.exists(csv_path):
-        st.warning(f"No CSV found for {ticker}, skipping.")
+        st.write(f"No CSV found for {ticker}, skipping.")
         continue
 
     # Load old historical data
