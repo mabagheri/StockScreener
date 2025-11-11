@@ -26,8 +26,9 @@ else:
     n_days = 365
 
 # if excel_file and csv_folder:
-# tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
-# tickers = tickers_info["Ticker"].dropna().unique().tolist()
+tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
+tickers = tickers_info["Ticker"].dropna().unique().tolist()
+st.write(tickers)
 tickers = ["SPY", "QQQ", "XIC.TO", "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
 
 today = datetime.today().date()
