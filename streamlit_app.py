@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 st.title("📉 Stock Drop Tracker")
 
 # --- User inputs ---
-excel_file = st.file_uploader("Upload Excel file with 'Ticker' column", type=["xlsx"])
+excel_file = pd.read_excel("Tickers_Info.xlsx", sheet='Canada') 
+# st.file_uploader("Upload Excel file with 'Ticker' column", type=["xlsx"])
 csv_folder = st.text_input("Enter folder path where your CSV files are stored")
 
 n_option = st.selectbox(
