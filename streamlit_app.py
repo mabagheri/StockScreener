@@ -75,7 +75,7 @@ for i, ticker in enumerate(tickers, start=1):
         continue
 
     current_price = df_window.iloc[-1]["Close"]
-    highest_price = df_window["Close"].max()
+    highest_price = df_window["High"].max()
     drop_pct = (current_price - highest_price) / highest_price * 100
 
     results.append({
