@@ -59,8 +59,10 @@ for i, ticker in enumerate(tickers, start=1):
     # Fetch recent data
     status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
     df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
+    st.write(ticker, df_new.shape, df_new.head(4))
 
     df_new = df_new.iloc[:, :].reset_index(drop=False)
+    st.write(ticker, df_new.shape, df_new.head(4))
     df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
     st.write(ticker, df_new.shape, df_new.head(4))
 
