@@ -30,6 +30,7 @@ tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 tickers = tickers_info["Ticker"].dropna().unique().tolist()
 tickers =  ["SPY", "QQQ", "XIC.TO", 
             "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"]
+st.write(tickers)
 
 today = datetime.today().date()
 start_date = datetime(2025, 11, 2).date()  # day after your last data
@@ -56,7 +57,7 @@ for ticker in tickers:
     df_new = df_new.rename(columns={"Date": "Date"})
     df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
-    # Keep only last n days
+    # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
     df_window = df_all[df_all["Date"] >= cutoff]
 
