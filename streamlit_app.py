@@ -54,21 +54,21 @@ for i, ticker in enumerate(tickers, start=1):
     st.write(ticker)
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
-    st.write(ticker, df_old.shape, df_old.head(3))
+    # st.write(ticker, df_old.shape, df_old.head(3))
 
     # Fetch recent data
     status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
     df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-    st.write(ticker, df_new.shape, df_new.head(4))
+    # st.write(ticker, df_new.shape, df_new.head(4))
 
     df_new = df_new.iloc[:, :].reset_index(drop=False)
-    st.write(ticker, df_new.shape, df_new.head(4))
+    # st.write(ticker, df_new.shape, df_new.head(4))
     df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-    st.write(ticker, df_new.shape, df_new.head(4))
+    # st.write(ticker, df_new.shape, df_new.head(4))
 
     # Combine
     df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
-    st.write(ticker, df_all.shape, df_all.head(5))
+    # st.write(ticker, df_all.shape, df_all.head(5))
 
     # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
