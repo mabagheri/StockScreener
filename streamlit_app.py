@@ -67,16 +67,16 @@ if not tickers:
     st.warning("No tickers found in selected sheet.")
     st.stop()
 
+results = []
+today = datetime.today().date()
+start_date = datetime(2025, 11, 2).date()
 st.markdown(f"### Step 2: Fetching Data ({market_choice} Market) since {start_date} ...")
 
 # tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 # tickers = tickers_info["Ticker"].dropna().unique().tolist()
 # tickers = ["SPY", "QQQ", "XIC.TO", "XLC", "XLY", "XLP", "XLV", "XLI", "XLK", "XLRE", "XLU"]
-
-results = []
 progress_bar = st.progress(0)
 status_text = st.empty()
-
 for i, ticker in enumerate(tickers, start=1):      
     
     csv_path = os.path.join(csv_folder, f"{ticker}.csv")
