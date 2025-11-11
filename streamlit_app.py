@@ -28,8 +28,8 @@ else:
 # if excel_file and csv_folder:
 # tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name='Canada')
 # tickers = tickers_info["Ticker"].dropna().unique().tolist()
-tickers =  ["SPY", "QQQ", "XIC.TO", 
-            "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"]
+tickers =  ["XIC.TO", 
+             "XLU"]
 st.write(tickers)
 
 today = datetime.today().date()
@@ -63,6 +63,9 @@ for ticker in tickers:
 
     # Keep only the last n days
     cutoff = datetime.today() - timedelta(days=n_days)
+    st.write(df_all.head(5))
+    st.write(df_all.tail(4))
+    
     df_window = df_all[df_all["Date"] >= cutoff]
 
     if df_window.empty:
