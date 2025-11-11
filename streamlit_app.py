@@ -51,7 +51,7 @@ for ticker in tickers:
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
     # Fetch recent data
-    status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
+    # status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
     df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
 
     df_new = df_new.iloc[:, :].reset_index(drop=False)
