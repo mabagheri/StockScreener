@@ -142,7 +142,7 @@ if st.button("Run Stock Drop Analysis"):
         # if df_window.empty:
         #     continue
 
-        st.dataframe(df_all.tail(6))
+        # st.dataframe(df_all.tail(6))
         current_price = df_all.iloc[-1]["Close"]
         current_date = df_all.iloc[-1]["Date"]
         # st.write(current_date, type(current_date))
