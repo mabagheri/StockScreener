@@ -19,7 +19,7 @@ def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
         return df[df['MarketCap'] > 200]
     elif cap_choice == "Large-cap ($10B–$200B)":
-        return df[(df['MarketCap'] >= 10) & (df['MarketCap'] <= 200)]
+        return df[(df['MarketCap'] >= 100) & (df['MarketCap'] <= 200)]
     elif cap_choice == "Mid-cap ($2B–$10B)":
         return df[(df['MarketCap'] >= 2) & (df['MarketCap'] < 10)]
     elif cap_choice == "Small-cap ($300M–$2B)":
@@ -126,16 +126,17 @@ if st.button("Run Stock Drop Analysis"):
         # if df_window.empty:
         #     continue
 
-        current_price = df_window.iloc[-1]["Close"]
+        current_price = df_all.iloc[-1]["Close"]
+        current_date = df_all.iloc[-1]["Date"]
+        print(current_date, type(current_date))
 
-        
         
         row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
 
         # Compute drop per selected lookback
         for label in lookbacks_selected:
-            days = lookback_options[label]
-            cutoff = datetime.now() - timedelta(days=days)
+            n_days = lookback_options[label]
+            cutoff = datetime.today() - timedelta(days=n_days)
 
             df_recent = df[df["Date"] >= cutoff]
             if df_recent.empty:
