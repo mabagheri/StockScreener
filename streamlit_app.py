@@ -4,7 +4,7 @@ import yfinance as yf
 import os
 from datetime import datetime, timedelta
 
-st.title("📉 Stock Drop Tracker!")
+st.title("📉 Stock Drop Tracker!!!")
 
 
 # --- User inputs ---
@@ -109,7 +109,10 @@ if st.button("Run Stock Drop Analysis"):
             except Exception as e:
                 st.warning(f"Error loading {ticker}: {e}")
                 continue
-    
+
+            st.write("df_old")
+            st.dataframe(df_old.tail(6))
+
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
             st.write(115, df_new.columns)
@@ -118,14 +121,13 @@ if st.button("Run Stock Drop Analysis"):
     
             st.write("119, df_new")
             st.dataframe(df_new.tail(26))
-            # df_new = df_new.iloc[:, :].reset_index(drop=False)
+            df_new = df_new.iloc[:, :].reset_index(drop=True)
             # st.write("122,df_new")
             # st.dataframe(df_new.tail(26))
 
             # df_new = df_new.rename(columns={"Adj Close": "Close"})
-            df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-            # st.write("df_old")
-            # st.dataframe(df_old.tail(6))
+            # df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
+            df_new.columns = [["Date", "Close", "High", "Low", "Open", "Volume"]]
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         # cutoff = datetime.today() - timedelta(days=n_days)
