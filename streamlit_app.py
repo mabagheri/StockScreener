@@ -138,7 +138,7 @@ if st.button("Run Stock Drop Analysis"):
             n_days = lookback_options[label]
             cutoff = datetime.today() - timedelta(days=n_days)
 
-            df_recent = df[df["Date"] >= cutoff]
+            df_recent = df_all[df_all ["Date"] >= cutoff]
             if df_recent.empty:
                 row_result[label] = None
                 continue
@@ -166,6 +166,13 @@ if st.button("Run Stock Drop Analysis"):
             return f'color: {color}'
 
         st.markdown("### Step 3: Results")
-        st.dataframe(df_results.style.applymap(highlight_drop, subset=[f"Drop % ({n_option})"]))
+        # st.dataframe(df_results.style.applymap(highlight_drop, subset=[f"Drop % ({n_option})"]))
+
+        st.dataframe(df_results, use_container_width=True)
+
+        # # Download CSV
+        # csv = df_summary.to_csv(index=False).encode("utf-8")
+        # st.download_button("⬇ Download CSV", csv, "summary.csv", "text/csv")
+    
     else:
         st.info("No data available yet.")
