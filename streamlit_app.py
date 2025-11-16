@@ -157,6 +157,7 @@ if st.button("Run Stock Drop Analysis"):
         for label in lookbacks_selected:
             # n_days = lookback_options[label]
             cutoff = lookback_options[label] # datetime.today() - timedelta(days=n_days)
+            cutoff = cutoff.date()
             st.write(cutoff, cutoff.date())
 
             
