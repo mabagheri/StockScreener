@@ -118,9 +118,9 @@ if st.button("Run Stock Drop Analysis"):
     
             st.write("119, df_new")
             st.dataframe(df_new.tail(26))
-            df_new = df_new.iloc[:, :].reset_index(drop=False)
-            st.write("122,df_new")
-            st.dataframe(df_new.tail(26))
+            # df_new = df_new.iloc[:, :].reset_index(drop=False)
+            # st.write("122,df_new")
+            # st.dataframe(df_new.tail(26))
 
             # df_new = df_new.rename(columns={"Adj Close": "Close"})
             df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
