@@ -101,7 +101,8 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
 
             df_all = yf.download(ticker, start=datetime(2020, 1, 1).date(), end=today + timedelta(days=1))
-            df_all = df_all.reset_index()
+            df_all = df_all.reset_index(drop=False)
+            st.dataframe(df_all.head(3))
             # continue
 
         else:
