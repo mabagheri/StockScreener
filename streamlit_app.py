@@ -94,10 +94,11 @@ if st.button("Run Stock Drop Analysis"):
     for i, ticker in enumerate(tickers, start=1):
         csv_path = os.path.join(csv_folder, f"{ticker}.csv")
         if not os.path.exists(csv_path):
-            # st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
+            st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
 
             df_all = yf.download(ticker, start=datetime(2020, 1, 1).date(), end=today + timedelta(days=1))
+            df_all = df_all.reset_index()
             # continue
 
         else:
@@ -108,16 +109,17 @@ if st.button("Run Stock Drop Analysis"):
                 st.warning(f"Error loading {ticker}: {e}")
                 continue
     
-            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
+            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
     
             if df_new.empty:
                 continue
     
             df_new = df_new.reset_index()
-            df_new = df_new.rename(columns={"Adj Close": "Close"})
+            # df_new = df_new.rename(columns={"Adj Close": "Close"})
             df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-    
+            st.dataframe(df_old.tail(6))
+            st.dataframe(df_new.tail(6))
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         # cutoff = datetime.today() - timedelta(days=n_days)
@@ -129,7 +131,7 @@ if st.button("Run Stock Drop Analysis"):
         st.dataframe(df_all.tail(6))
         current_price = df_all.iloc[-1]["Close"]
         current_date = df_all.iloc[-1]["Date"]
-        st.write(current_date, type(current_date))
+        # st.write(current_date, type(current_date))
 
         
         row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
