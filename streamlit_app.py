@@ -152,11 +152,9 @@ if st.button("Run Stock Drop Analysis"):
 
         # Compute drop per selected lookback
         for label in lookbacks_selected:
-            # n_days = lookback_options[label]
             cutoff = lookback_options[label] # datetime.today() - timedelta(days=n_days)
-            cutoff = cutoff.date()
+            # cutoff = cutoff.date()
             # st.write(cutoff, cutoff.date())
-
             
             df_recent = df_all[df_all ["Date"] >= cutoff]
             st.write(cutoff, df_recent.shape)
@@ -172,12 +170,6 @@ if st.button("Run Stock Drop Analysis"):
 
         results.append(row_result)
 
-        # results.append({
-        #     "Ticker": ticker,
-        #     "Current Price": round(current_price, 2),
-        #     f"Highest ({n_option})": round(highest_price, 2),
-        #     f"Drop % ({n_option})": round(drop_pct, 2)
-        # })
 
         progress_bar.progress(i / len(tickers))
 
