@@ -112,18 +112,20 @@ if st.button("Run Stock Drop Analysis"):
     
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-    
+            st.write(115, df_new.columns)
             if df_new.empty:
                 continue
     
+            st.write("119, df_new")
+            st.dataframe(df_new.tail(26))
             df_new = df_new.iloc[:, :].reset_index(drop=False)
+            st.write("122,df_new")
+            st.dataframe(df_new.tail(26))
 
             # df_new = df_new.rename(columns={"Adj Close": "Close"})
             df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-            st.write("df_old")
-            st.dataframe(df_old.tail(6))
-            st.write("df_new")
-            st.dataframe(df_new.tail(6))
+            # st.write("df_old")
+            # st.dataframe(df_old.tail(6))
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         # cutoff = datetime.today() - timedelta(days=n_days)
