@@ -3,6 +3,8 @@ import pandas as pd
 import yfinance as yf
 import os
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+
 
 st.title("📉 Stock Drop Tracker!!!")
 
@@ -35,10 +37,10 @@ cap_choice = st.selectbox(
 
 # --- Lookback period selection ---
 lookback_options = {
-    "1 Week": 7,
-    "1 Month": 30,
-    "6 Months": 180,
-    "1 Year": 365
+    "1 Week": datetime.today()  - relativedelta(days=7),
+    "1 Month": datetime.today()  - relativedelta(months=1),
+    "6 Months": datetime.today()  - relativedelta(months=6),
+    "1 Year": datetime.today()  - relativedelta(years=1)
 }
 lookbacks_selected = st.multiselect(
     "Lookback Periods:",
@@ -149,10 +151,14 @@ if st.button("Run Stock Drop Analysis"):
         row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
 
         # Compute drop per selected lookback
+        # cutoff_dict = {
+            
+        # }
         for label in lookbacks_selected:
-            n_days = lookback_options[label]
-            cutoff = datetime.today() - timedelta(days=n_days)
+            # n_days = lookback_options[label]
+            cutoff = lookback_options[label] # datetime.today() - timedelta(days=n_days)
 
+            
             df_recent = df_all[df_all ["Date"] >= cutoff]
             st.write(cutoff, df_recent.shape)
             # st.write(df_recent.tail(4))
