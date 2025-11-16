@@ -110,20 +110,21 @@ if st.button("Run Stock Drop Analysis"):
                 st.warning(f"Error loading {ticker}: {e}")
                 continue
 
-            st.write("df_old")
-            st.dataframe(df_old.tail(6))
+            # st.write("df_old")
+            # st.dataframe(df_old.tail(6))
 
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-            st.write(115, df_new.columns)
+            # st.write(115, df_new.columns)
             if df_new.empty:
                 continue
     
-            st.write("119, df_new")
-            st.dataframe(df_new.tail(26))
+            # st.write("119, df_new")
+            # st.dataframe(df_new.tail(26))
             df_new = df_new.iloc[:, :].reset_index(drop=False)
+            st.write("125, df_new")
             st.dataframe(df_new.tail(30))
-            st.write("119", df_new.shape)
+            # st.write("119", df_new.shape)
 
             # st.write("122,df_new")
             # st.dataframe(df_new.tail(26))
@@ -154,7 +155,7 @@ if st.button("Run Stock Drop Analysis"):
             st.write(cutoff)
 
             df_recent = df_all[df_all ["Date"] >= cutoff]
-            st.write(df_recent.tail(4))
+            # st.write(df_recent.tail(4))
             if df_recent.empty:
                 row_result[label] = None
                 continue
