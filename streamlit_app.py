@@ -30,7 +30,7 @@ def filter_market_cap(df, cap_choice):
 cap_choice = st.selectbox(
     "Select Market Cap Range",
     ["All", "Mega-cap (> $200B)", "Large-cap ($10B–$200B)", "Mid-cap ($2B–$10B)", "Small-cap ($300M–$2B)"],
-    default="Large-cap ($10B–$200B)"
+    # default="Large-cap ($10B–$200B)"
 )
 
 # --- Lookback period selection ---
