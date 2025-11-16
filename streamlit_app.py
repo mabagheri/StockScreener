@@ -121,13 +121,13 @@ if st.button("Run Stock Drop Analysis"):
     
             st.write("119, df_new")
             st.dataframe(df_new.tail(26))
-            df_new = df_new.iloc[:, :].reset_index(drop=True)
+            df_new = df_new.iloc[1:, :].reset_index(drop=True)
             # st.write("122,df_new")
             # st.dataframe(df_new.tail(26))
 
             # df_new = df_new.rename(columns={"Adj Close": "Close"})
             # df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-            df_new.columns = [["Date", "Close", "High", "Low", "Open", "Volume"]]
+            df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         # cutoff = datetime.today() - timedelta(days=n_days)
