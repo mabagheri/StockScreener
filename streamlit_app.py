@@ -116,10 +116,13 @@ if st.button("Run Stock Drop Analysis"):
             if df_new.empty:
                 continue
     
-            df_new = df_new.reset_index()
+            df_new = df_new.iloc[:, :].reset_index(drop=False)
+
             # df_new = df_new.rename(columns={"Adj Close": "Close"})
             df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
+            st.write("df_old")
             st.dataframe(df_old.tail(6))
+            st.write("df_new")
             st.dataframe(df_new.tail(6))
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
