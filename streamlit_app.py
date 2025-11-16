@@ -21,7 +21,7 @@ def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
         return df[df['MarketCap'] > 200]
     elif cap_choice == "Large-cap ($10B–$200B)":
-        return df[(df['MarketCap'] >= 100) & (df['MarketCap'] <= 200)]
+        return df[(df['MarketCap'] >= 10) & (df['MarketCap'] <= 200)]
     elif cap_choice == "Mid-cap ($2B–$10B)":
         return df[(df['MarketCap'] >= 2) & (df['MarketCap'] < 10)]
     elif cap_choice == "Small-cap ($300M–$2B)":
@@ -157,8 +157,8 @@ if st.button("Run Stock Drop Analysis"):
             # st.write(cutoff, cutoff.date())
             
             df_recent = df_all[df_all ["Date"] >= cutoff]
-            st.write(cutoff, df_recent.shape)
-            st.dataframe(df_recent)
+            # st.write(cutoff, df_recent.shape)
+            # st.dataframe(df_recent)
             # st.write(df_recent.tail(4))
             if df_recent.empty:
                 row_result[label] = None
@@ -166,7 +166,8 @@ if st.button("Run Stock Drop Analysis"):
 
             highest_price = round(df_recent["Close"].max(), 2)
             drop_pct = (current_price - highest_price) / highest_price * 100
-            row_result[f"Drop%({label})"] = round(drop_pct, 2)
+            row_result[f"Drop % ({label})"] = round(drop_pct, 2)
+            
 
         results.append(row_result)
 
