@@ -161,6 +161,7 @@ if st.button("Run Stock Drop Analysis"):
             
             df_recent = df_all[df_all ["Date"] >= cutoff]
             st.write(cutoff, df_recent.shape)
+            st.dataframe(df_recent)
             # st.write(df_recent.tail(4))
             if df_recent.empty:
                 row_result[label] = None
