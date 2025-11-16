@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 
-st.title("📉 Stock Drop Tracker!!!")
+st.title("📉 Stock Drop Tracker!")
 
 
 # --- User inputs ---
