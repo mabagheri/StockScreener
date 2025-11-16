@@ -121,8 +121,7 @@ if st.button("Run Stock Drop Analysis"):
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         # cutoff = datetime.today() - timedelta(days=n_days)
-        # df_window = df_al
-        l[df_all["Date"] >= cutoff]
+        # df_window = df_all[df_all["Date"] >= cutoff]
 
         # if df_window.empty:
         #     continue
