@@ -156,7 +156,7 @@ if st.button("Run Stock Drop Analysis"):
         # }
         for label in lookbacks_selected:
             # n_days = lookback_options[label]
-            cutoff = lookback_options[label] # datetime.today() - timedelta(days=n_days)
+            cutoff = lookback_options[label].date() # datetime.today() - timedelta(days=n_days)
 
             
             df_recent = df_all[df_all ["Date"] >= cutoff]
