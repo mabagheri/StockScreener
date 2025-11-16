@@ -33,11 +33,23 @@ cap_choice = st.selectbox(
 )
 
 # --- Lookback period selection ---
-n_option = st.selectbox(
-    "Select lookback period",
-    ["1 Week", "1 Month", "6 Months", "1 Year"]
+lookback_options = {
+    "1 Week": 7,
+    "1 Month": 30,
+    "6 Months": 180,
+    "1 Year": 365
+}
+lookbacks_selected = st.multiselect(
+    "Lookback Periods:",
+    list(lookback_options.keys()),
+    default=["1 Month", "6 Months", "1 Year"]
 )
-n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
+
+# lookbacks_selected = st.selectbox(
+#     "Select lookback period",
+#     ["1 Week", "1 Month", "6 Months", "1 Year"]
+# )
+# n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
 
 # --- Run button ---
 if st.button("Run Stock Drop Analysis"):
@@ -82,27 +94,31 @@ if st.button("Run Stock Drop Analysis"):
     for i, ticker in enumerate(tickers, start=1):
         csv_path = os.path.join(csv_folder, f"{ticker}.csv")
         if not os.path.exists(csv_path):
-            st.warning(f"No CSV found for {ticker}, skipping.")
-            continue
+            # st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
+            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
 
-        try:
-            df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-            df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
-        except Exception as e:
-            st.warning(f"Error loading {ticker}: {e}")
-            continue
+            df_all = yf.download(ticker, start=datetime(2020, 1, 1).date(), end=today + timedelta(days=1))
+            # continue
 
-        status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
-        df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-
-        if df_new.empty:
-            continue
-
-        df_new = df_new.reset_index()
-        df_new = df_new.rename(columns={"Adj Close": "Close"})
-        df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-
-        df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
+        else:
+            try:
+                df_old = pd.read_csv(csv_path, parse_dates=["Date"])
+                df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
+            except Exception as e:
+                st.warning(f"Error loading {ticker}: {e}")
+                continue
+    
+            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
+            df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
+    
+            if df_new.empty:
+                continue
+    
+            df_new = df_new.reset_index()
+            df_new = df_new.rename(columns={"Adj Close": "Close"})
+            df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
+    
+            df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
         cutoff = datetime.today() - timedelta(days=n_days)
         df_window = df_all[df_all["Date"] >= cutoff]
