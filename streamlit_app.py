@@ -126,9 +126,10 @@ if st.button("Run Stock Drop Analysis"):
         # if df_window.empty:
         #     continue
 
+        st.dataframe(df_all.tail(6))
         current_price = df_all.iloc[-1]["Close"]
         current_date = df_all.iloc[-1]["Date"]
-        print(current_date, type(current_date))
+        st.write(current_date, type(current_date))
 
         
         row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
@@ -137,8 +138,10 @@ if st.button("Run Stock Drop Analysis"):
         for label in lookbacks_selected:
             n_days = lookback_options[label]
             cutoff = datetime.today() - timedelta(days=n_days)
+            st.write(cutoff)
 
             df_recent = df_all[df_all ["Date"] >= cutoff]
+            st.write(df_recent.tail(4))
             if df_recent.empty:
                 row_result[label] = None
                 continue
