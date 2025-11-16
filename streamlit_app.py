@@ -120,22 +120,41 @@ if st.button("Run Stock Drop Analysis"):
     
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
 
-        cutoff = datetime.today() - timedelta(days=n_days)
-        df_window = df_all[df_all["Date"] >= cutoff]
+        # cutoff = datetime.today() - timedelta(days=n_days)
+        # df_window = df_al
+        l[df_all["Date"] >= cutoff]
 
-        if df_window.empty:
-            continue
+        # if df_window.empty:
+        #     continue
 
         current_price = df_window.iloc[-1]["Close"]
-        highest_price = df_window["Close"].max()
-        drop_pct = (current_price - highest_price) / highest_price * 100
 
-        results.append({
-            "Ticker": ticker,
-            "Current Price": round(current_price, 2),
-            f"Highest ({n_option})": round(highest_price, 2),
-            f"Drop % ({n_option})": round(drop_pct, 2)
-        })
+        
+        
+        row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
+
+        # Compute drop per selected lookback
+        for label in lookbacks_selected:
+            days = lookback_options[label]
+            cutoff = datetime.now() - timedelta(days=days)
+
+            df_recent = df[df["Date"] >= cutoff]
+            if df_recent.empty:
+                row_result[label] = None
+                continue
+
+            highest_price = round(df_recent["Close"].max(), 2)
+            drop_pct = (current_price - highest_price) / highest_price * 100
+            row_result[f"Drop%({label})"] = round(drop_pct, 2)
+
+        results.append(row_result)
+
+        # results.append({
+        #     "Ticker": ticker,
+        #     "Current Price": round(current_price, 2),
+        #     f"Highest ({n_option})": round(highest_price, 2),
+        #     f"Drop % ({n_option})": round(drop_pct, 2)
+        # })
 
         progress_bar.progress(i / len(tickers))
 
