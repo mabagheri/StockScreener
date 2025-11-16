@@ -122,8 +122,8 @@ if st.button("Run Stock Drop Analysis"):
             # st.write("119, df_new")
             # st.dataframe(df_new.tail(26))
             df_new = df_new.iloc[:, :].reset_index(drop=False)
-            st.write("125, df_new")
-            st.dataframe(df_new.tail(30))
+            # st.write("125, df_new")
+            # st.dataframe(df_new.tail(30))
             # st.write("119", df_new.shape)
 
             # st.write("122,df_new")
@@ -152,9 +152,9 @@ if st.button("Run Stock Drop Analysis"):
         for label in lookbacks_selected:
             n_days = lookback_options[label]
             cutoff = datetime.today() - timedelta(days=n_days)
-            st.write(cutoff)
 
             df_recent = df_all[df_all ["Date"] >= cutoff]
+            st.write(cutoff, df_recent.shape)
             # st.write(df_recent.tail(4))
             if df_recent.empty:
                 row_result[label] = None
