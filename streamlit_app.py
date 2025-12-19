@@ -89,7 +89,6 @@ if st.button("Run Stock Drop Analysis"):
 
     results = []
     today = datetime.today().date()
-    start_date = datetime(2025, 11, 2).date()
 
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -99,31 +98,26 @@ if st.button("Run Stock Drop Analysis"):
         if not os.path.exists(csv_path):
             st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
-
-            df_all = yf.download(ticker, start=datetime(2020, 1, 1).date(), end=today + timedelta(days=1))
+            st_date = today + timedelta(days=365*3)
+            df_all = yf.download(ticker, start=st_date, end=today + timedelta(days=1))
             df_all = df_all.reset_index(drop=False)
-            # st.dataframe(df_all.head(4))
             # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
 
-            # st.dataframe(df_all.head(4))
             if df_all.empty:
                 st.warning(f"Error downloanding for {ticker}!")
                 continue
-
-            # continue
-
-        else:
+                
+        else:  # if CSV file exists!
             try:
                 df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-                df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
+                
+                # df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
             except Exception as e:
                 st.warning(f"Error loading {ticker}: {e}")
                 continue
 
-            # st.write("df_old")
-            # st.dataframe(df_old.tail(6))
-
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
+            start_date = datetime(2025, 11, 2).date()
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
             # st.write(115, df_new.columns)
             if df_new.empty:
@@ -159,8 +153,8 @@ if st.button("Run Stock Drop Analysis"):
         row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
 
         # Compute drop per selected lookback
-        for label in lookbacks_selected:
-            cutoff = lookback_options[label] # datetime.today() - timedelta(days=n_days)
+        for lookback in lookbacks_selected:
+            cutoff = lookback_options[lookback] # datetime.today() - timedelta(days=n_days)
             # cutoff = cutoff.date()
             # st.write(cutoff, cutoff.date())
             
@@ -169,14 +163,13 @@ if st.button("Run Stock Drop Analysis"):
             # st.dataframe(df_recent)
             # st.write(df_recent.tail(4))
             if df_recent.empty:
-                row_result[label] = None
+                row_result[lookback] = None
                 continue
 
             highest_price = round(df_recent["Close"].max(), 2)
             drop_pct = (current_price - highest_price) / highest_price * 100
-            row_result[f"Drop % ({label})"] = round(drop_pct, 2)
+            row_result[f"Drop % ({lookback})"] = round(drop_pct, 2)
             
-
         results.append(row_result)
 
 
