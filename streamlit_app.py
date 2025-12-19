@@ -79,6 +79,7 @@ if st.button("Run Stock Drop Analysis"):
 
     # --- Prepare tickers list ---
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
+    tickers = ["RY.TO", "ABX.TO"]
     st.write(tickers)
 
     if not tickers:
@@ -107,14 +108,13 @@ if st.button("Run Stock Drop Analysis"):
 
             st.dataframe(df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
+            df_all.columns = df_all.columns.get_level_values(0)
+
             st.dataframe(df_all.head(4)) 
-            df_all = df_all.iloc[1:, :].reset_index(drop=False)
-            st.dataframe(df_all.head(3)) 
             # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-            st.dataframe(df_all.head(3)) 
             st.write(df_all.columns)
             st.write(type(df_all.columns))
-            st.write(117, df_all.columns.get_level_values(1))
+            # st.write(117, df_all.columns.get_level_values(1))
             
 
             if df_all.empty:
