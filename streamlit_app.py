@@ -79,7 +79,7 @@ if st.button("Run Stock Drop Analysis"):
 
     # --- Prepare tickers list ---
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
-    tickers = ["RY.TO", "ABX.TO"]
+    # tickers = ["RY.TO", "ABX.TO"]
     st.write(tickers)
 
     if not tickers:
