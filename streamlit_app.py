@@ -99,8 +99,12 @@ if st.button("Run Stock Drop Analysis"):
         if not os.path.exists(csv_path):
             st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
-            st_date = today + timedelta(days=365*3)
-            df_all = yf.download(ticker, start=datetime(2024, 1, 1).date(), end=today + timedelta(days=1))
+            # st_date = today + timedelta(days=365*3)
+            df_all = yf.download(ticker, start=datetime(2025, 4, 1).date(), end=today + timedelta(days=1))
+            st.write(104, df_all.columns)
+            st.write(105, type(df_all.columns))
+            st.write(106, df_all.columns.get_level_values(1)
+
             st.dataframe(df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
             st.dataframe(df_all.head(4)) 
@@ -109,6 +113,8 @@ if st.button("Run Stock Drop Analysis"):
             # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
             st.dataframe(df_all.head(3)) 
             st.write(df_all.columns)
+            st.write(type(df_all.columns))
+            st.write(117, df_all.columns.get_level_values(1)
             
 
             if df_all.empty:
@@ -126,7 +132,8 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             start_date = datetime(2025, 11, 2).date()
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-            # st.write(115, df_new.columns)
+            st.write(129, df_new.columns)
+            st.write(130, df_new.head(3))
             if df_new.empty:
                 continue
     
