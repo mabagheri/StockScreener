@@ -106,7 +106,7 @@ if st.button("Run Stock Drop Analysis"):
             st.dataframe(df_all.head(4)) 
             df_all = df_all.iloc[1:, :].reset_index(drop=False)
             st.dataframe(df_all.head(3)) 
-            df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+            # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
             st.dataframe(df_all.head(3)) 
 
             if df_all.empty:
@@ -142,6 +142,8 @@ if st.button("Run Stock Drop Analysis"):
             # df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
             df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
+            st.write(145, df_all.head(3))
+            st.dataframe(df_all.head(4))
 
         # cutoff = datetime.today() - timedelta(days=n_days)
         # df_window = df_all[df_all["Date"] >= cutoff]
