@@ -95,12 +95,14 @@ if st.button("Run Stock Drop Analysis"):
 
     for i, ticker in enumerate(tickers, start=1):
         csv_path = os.path.join(csv_folder, f"{ticker}.csv")
+        
         if not os.path.exists(csv_path):
             st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
             st_date = today + timedelta(days=365*3)
-            df_all = yf.download(ticker, start=st_date, end=today + timedelta(days=1))
+            df_all = yf.download(ticker, start=datetime(2024, 1, 1).date(), end=today + timedelta(days=1))
             df_all = df_all.reset_index(drop=False)
+            st.dataframe(105, df_all.head(4)) 
             # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
 
             if df_all.empty:
