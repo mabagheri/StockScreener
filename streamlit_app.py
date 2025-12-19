@@ -21,7 +21,7 @@ def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
         return df[df['MarketCap'] > 200]
     elif cap_choice == "Large-cap ($10B–$200B)":
-        return df[(df['MarketCap'] >= 10) & (df['MarketCap'] <= 200)]
+        return df[(df['MarketCap'] >= 40) & (df['MarketCap'] <= 200)]
     elif cap_choice == "Mid-cap ($2B–$10B)":
         return df[(df['MarketCap'] >= 2) & (df['MarketCap'] < 10)]
     elif cap_choice == "Small-cap ($300M–$2B)":
@@ -101,10 +101,13 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
             st_date = today + timedelta(days=365*3)
             df_all = yf.download(ticker, start=datetime(2024, 1, 1).date(), end=today + timedelta(days=1))
+            st.dataframe(104, df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
-            st.dataframe(105, df_all.head(4)) 
-            df_all = df_all.iloc[:, :].reset_index(drop=False)
+            st.dataframe(106, df_all.head(4)) 
+            df_all = df_all.iloc[1:, :].reset_index(drop=False)
+            st.dataframe(108, df_all.head(3)) 
             df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+            st.dataframe(110, df_all.head(3)) 
 
             if df_all.empty:
                 st.warning(f"Error downloanding for {ticker}!")
@@ -113,8 +116,7 @@ if st.button("Run Stock Drop Analysis"):
         else:  # if CSV file exists!
             try:
                 df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-                
-                # df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
+                df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
             except Exception as e:
                 st.warning(f"Error loading {ticker}: {e}")
                 continue
