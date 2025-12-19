@@ -101,13 +101,13 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
             st_date = today + timedelta(days=365*3)
             df_all = yf.download(ticker, start=datetime(2024, 1, 1).date(), end=today + timedelta(days=1))
-            st.dataframe(104, df_all.head(4)) 
+            st.dataframe(df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
-            st.dataframe(106, df_all.head(4)) 
+            st.dataframe(df_all.head(4)) 
             df_all = df_all.iloc[1:, :].reset_index(drop=False)
-            st.dataframe(108, df_all.head(3)) 
+            st.dataframe(df_all.head(3)) 
             df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-            st.dataframe(110, df_all.head(3)) 
+            st.dataframe(df_all.head(3)) 
 
             if df_all.empty:
                 st.warning(f"Error downloanding for {ticker}!")
