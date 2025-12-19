@@ -14,7 +14,7 @@ st.markdown("### Step 1: Choose Market and Market Cap Filters")
 
 # File and sheet selection
 excel_file = "Tickers_Info.xlsx"
-market_choice = st.radio("Select Market:", ["Canada", "US"], horizontal=True)
+market_choice = st.radio("Select Market:", ["TSX", "US"], horizontal=True)
 
 # Market cap filters
 def filter_market_cap(df, cap_choice):
