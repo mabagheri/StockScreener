@@ -102,18 +102,18 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
             # st_date = today + timedelta(days=365*3)
             df_all = yf.download(ticker, start=datetime(2025, 4, 1).date(), end=today + timedelta(days=1))
-            st.write(104, df_all.columns)
-            st.write(105, type(df_all.columns))
-            st.write(106, df_all.columns.get_level_values(1))
+            # st.write(104, df_all.columns)
+            # st.write(105, type(df_all.columns))
+            # st.write(106, df_all.columns.get_level_values(1))
 
-            st.dataframe(df_all.head(4)) 
+            # st.dataframe(df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
             df_all.columns = df_all.columns.get_level_values(0)
 
             st.dataframe(df_all.head(4)) 
-            # df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-            st.write(df_all.columns)
-            st.write(type(df_all.columns))
+            df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+            # st.write(df_all.columns)
+            # st.write(type(df_all.columns))
             # st.write(117, df_all.columns.get_level_values(1))
             
 
@@ -132,8 +132,8 @@ if st.button("Run Stock Drop Analysis"):
             status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
             start_date = datetime(2025, 11, 2).date()
             df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-            st.write(129, df_new.columns)
-            st.write(130, df_new.head(3))
+            # st.write(129, df_new.columns)
+            # st.write(130, df_new.head(3))
             if df_new.empty:
                 continue
     
@@ -151,8 +151,8 @@ if st.button("Run Stock Drop Analysis"):
             # df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
             df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
             df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
-            st.write(145, df_all.head(4))
-            st.dataframe(df_all.tail(3))
+            # st.write(145, df_all.head(4))
+            # st.dataframe(df_all.tail(3))
 
         # cutoff = datetime.today() - timedelta(days=n_days)
         # df_window = df_all[df_all["Date"] >= cutoff]
