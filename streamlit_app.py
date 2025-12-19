@@ -103,7 +103,7 @@ if st.button("Run Stock Drop Analysis"):
             df_all = yf.download(ticker, start=datetime(2025, 4, 1).date(), end=today + timedelta(days=1))
             st.write(104, df_all.columns)
             st.write(105, type(df_all.columns))
-            st.write(106, df_all.columns.get_level_values(1)
+            st.write(106, df_all.columns.get_level_values(1))
 
             st.dataframe(df_all.head(4)) 
             df_all = df_all.reset_index(drop=False)
@@ -114,7 +114,7 @@ if st.button("Run Stock Drop Analysis"):
             st.dataframe(df_all.head(3)) 
             st.write(df_all.columns)
             st.write(type(df_all.columns))
-            st.write(117, df_all.columns.get_level_values(1)
+            st.write(117, df_all.columns.get_level_values(1))
             
 
             if df_all.empty:
