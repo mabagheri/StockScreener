@@ -2,210 +2,212 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import os
+import io
+import zipfile
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# --------------------------------------------------
+# App config
+# --------------------------------------------------
+st.set_page_config(page_title="Stock Drop Tracker", layout="wide")
+st.title("📉 Stock Drop Tracker")
 
-st.title("📉 Stock Drop Tracker!")
+DATA_FOLDER = "Stock_data"
+EXCEL_FILE = "Tickers_Info.xlsx"
+MAX_WORKERS = 8   # parallel downloads (TSX-safe)
 
+# --------------------------------------------------
+# Cached historical loader (PER TICKER)
+# --------------------------------------------------
+@st.cache_data(show_spinner=False)
+def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
+    """
+    Load full historical data for a ticker.
+    Cached per ticker to prevent re-downloading.
+    """
 
-# --- User inputs ---
-st.markdown("### Step 1: Choose Market and Market Cap Filters")
+    csv_path = os.path.join(DATA_FOLDER, f"{ticker}.csv")
 
-# File and sheet selection
-excel_file = "Tickers_Info.xlsx"
-market_choice = st.radio("Select Market:", ["TSX", "US"], horizontal=True)
+    # --- No CSV → full download ---
+    if not os.path.exists(csv_path):
+        start_date = datetime.today() - relativedelta(years=2)
 
-# Market cap filters
-def filter_market_cap(df, cap_choice):
-    if cap_choice == "Mega-cap (> $200B)":
-        return df[df['MarketCap'] > 200]
-    elif cap_choice == "Large-cap ($10B–$200B)":
-        return df[(df['MarketCap'] >= 40) & (df['MarketCap'] <= 200)]
-    elif cap_choice == "Mid-cap ($2B–$10B)":
-        return df[(df['MarketCap'] >= 2) & (df['MarketCap'] < 10)]
-    elif cap_choice == "Small-cap ($300M–$2B)":
-        return df[(df['MarketCap'] >= 0.3) & (df['MarketCap'] < 2)]
-    else:
+        df = yf.download(
+            ticker,
+            start=start_date.date(),
+            end=today + timedelta(days=1),
+            progress=False,
+            threads=False
+        )
+
+        if df.empty:
+            return pd.DataFrame()
+
+        df = df.reset_index()
+        df.columns = df.columns.get_level_values(0)
+        df.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
         return df
 
+    # --- CSV exists → incremental update ---
+    df_old = pd.read_csv(csv_path, parse_dates=["Date"])
+    df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
+
+    start_date = datetime(2025, 11, 2).date()
+    df_new = yf.download(
+        ticker,
+        start=start_date,
+        end=today + timedelta(days=1),
+        progress=False,
+        threads=False
+    )
+
+    if not df_new.empty:
+        df_new = df_new.reset_index()
+        df_new.columns = df_new.columns.get_level_values(0)
+        df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
+        df_all = df_all.drop_duplicates(subset=["Date"])
+    else:
+        df_all = df_old
+
+    return df_all
+
+
+# --------------------------------------------------
+# Market cap filter
+# --------------------------------------------------
+def filter_market_cap(df, cap_choice):
+    if cap_choice == "Mega-cap (> $200B)":
+        return df[df["MarketCap"] > 200]
+    elif cap_choice == "Large-cap ($40B–$200B)":
+        return df[(df["MarketCap"] >= 40) & (df["MarketCap"] <= 200)]
+    elif cap_choice == "Mid-cap ($2B–$10B)":
+        return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
+    elif cap_choice == "Small-cap ($300M–$2B)":
+        return df[(df["MarketCap"] >= 0.3) & (df["MarketCap"] < 2)]
+    return df
+
+
+# --------------------------------------------------
+# UI – Step 1
+# --------------------------------------------------
+st.markdown("### Step 1: Choose Market & Filters")
+
+market_choice = st.radio("Market", ["TSX", "US"], horizontal=True)
+
 cap_choice = st.selectbox(
-    "Select Market Cap Range",
-    ["All", "Mega-cap (> $200B)", "Large-cap ($10B–$200B)", "Mid-cap ($2B–$10B)", "Small-cap ($300M–$2B)"],
-    # default="Large-cap ($10B–$200B)"
+    "Market Cap",
+    [
+        "All",
+        "Mega-cap (> $200B)",
+        "Large-cap ($40B–$200B)",
+        "Mid-cap ($2B–$10B)",
+        "Small-cap ($300M–$2B)"
+    ]
 )
 
-# --- Lookback period selection ---
 lookback_options = {
-    "1 Week": datetime.today()  - relativedelta(days=7),
-    "1 Month": datetime.today()  - relativedelta(months=1),
-    "6 Months": datetime.today()  - relativedelta(months=6),
-    "1 Year": datetime.today()  - relativedelta(years=1)
+    "1 Week": datetime.today() - relativedelta(days=7),
+    "1 Month": datetime.today() - relativedelta(months=1),
+    "6 Months": datetime.today() - relativedelta(months=6),
+    "1 Year": datetime.today() - relativedelta(years=1)
 }
+
 lookbacks_selected = st.multiselect(
-    "Lookback Periods:",
+    "Lookback Periods",
     list(lookback_options.keys()),
     default=["1 Month", "6 Months", "1 Year"]
 )
 
-# lookbacks_selected = st.selectbox(
-#     "Select lookback period",
-#     ["1 Week", "1 Month", "6 Months", "1 Year"]
-# )
-# n_days = {"1 Week": 7, "1 Month": 30, "6 Months": 180, "1 Year": 365}[n_option]
+# --------------------------------------------------
+# Run
+# --------------------------------------------------
+if st.button("🚀 Run Stock Drop Analysis"):
 
-# --- Run button ---
-if st.button("Run Stock Drop Analysis"):
-    # --- Load ticker info ---
+    # --- Load tickers ---
     try:
-        tickers_info = pd.read_excel(excel_file, sheet_name=market_choice)
+        tickers_info = pd.read_excel(EXCEL_FILE, sheet_name=market_choice)
     except Exception as e:
-        st.error(f"Error reading Excel file: {e}")
+        st.error(f"Excel error: {e}")
         st.stop()
 
-    # Filter by market cap
-    if 'MarketCap' not in tickers_info.columns:
-        st.warning("Excel file must contain a 'MarketCap' column.")
-        st.stop()
-    else:
-        tickers_info = filter_market_cap(tickers_info, cap_choice)
-
-    if tickers_info.empty:
-        st.info("No tickers match the selected filters.")
+    if "MarketCap" not in tickers_info.columns:
+        st.error("Excel must contain a MarketCap column")
         st.stop()
 
-    # --- Folder for CSV files ---
-    csv_folder = "Stock_data"
-
-    # --- Prepare tickers list ---
+    tickers_info = filter_market_cap(tickers_info, cap_choice)
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
-    # tickers = ["RY.TO", "ABX.TO"]
-    st.write(tickers)
 
     if not tickers:
-        st.warning("No tickers found in selected sheet.")
+        st.warning("No tickers match selection")
         st.stop()
 
-    st.markdown(f"### Step 2: Fetching Data ({market_choice} Market)")
+    st.markdown("### Step 2: Downloading & Computing (Parallelized)")
 
-    results = []
     today = datetime.today().date()
+    results = {}
+    progress = st.progress(0)
 
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    # --------------------------------------------------
+    # Parallel download + caching
+    # --------------------------------------------------
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {
+            executor.submit(load_full_history, ticker, today): ticker
+            for ticker in tickers
+        }
 
-    for i, ticker in enumerate(tickers, start=1):
-        csv_path = os.path.join(csv_folder, f"{ticker}.csv")
-        
-        if not os.path.exists(csv_path):
-            st.warning(f"No CSV found for {ticker}! Dowmload from Jan. 1, 2020")
-            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}) ...")
-            # st_date = today + timedelta(days=365*3)
-            df_all = yf.download(ticker, start=datetime(2025, 4, 1).date(), end=today + timedelta(days=1))
-            # st.write(104, df_all.columns)
-            # st.write(105, type(df_all.columns))
-            # st.write(106, df_all.columns.get_level_values(1))
-
-            # st.dataframe(df_all.head(4)) 
-            df_all = df_all.reset_index(drop=False)
-            df_all.columns = df_all.columns.get_level_values(0)
-
-            st.dataframe(df_all.head(4)) 
-            df_all.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-            # st.write(df_all.columns)
-            # st.write(type(df_all.columns))
-            # st.write(117, df_all.columns.get_level_values(1))
-            
+        for i, future in enumerate(as_completed(futures)):
+            ticker = futures[future]
+            df_all = future.result()
 
             if df_all.empty:
-                st.warning(f"Error downloanding for {ticker}!")
-                continue
-                
-        else:  # if CSV file exists!
-            try:
-                df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-                df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
-            except Exception as e:
-                st.warning(f"Error loading {ticker}: {e}")
                 continue
 
-            status_text.text(f"Downloading {ticker} ({i}/{len(tickers)}): latest days")
-            start_date = datetime(2025, 11, 2).date()
-            df_new = yf.download(ticker, start=start_date, end=today + timedelta(days=1))
-            # st.write(129, df_new.columns)
-            # st.write(130, df_new.head(3))
-            if df_new.empty:
-                continue
-    
-            # st.write("119, df_new")
-            # st.dataframe(df_new.tail(26))
-            df_new = df_new.iloc[:, :].reset_index(drop=False)
-            # st.write("125, df_new")
-            # st.dataframe(df_new.tail(30))
-            # st.write("119", df_new.shape)
+            current_price = df_all.iloc[-1]["Close"]
+            row = {"Ticker": ticker, "Current": round(current_price, 2)}
 
-            # st.write("122,df_new")
-            # st.dataframe(df_new.tail(26))
+            for lb in lookbacks_selected:
+                cutoff = lookback_options[lb]
+                df_recent = df_all[df_all["Date"] >= cutoff]
 
-            # df_new = df_new.rename(columns={"Adj Close": "Close"})
-            # df_new = df_new[["Date", "Close", "High", "Low", "Open", "Volume"]]
-            df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-            df_all = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["Date"])
-            # st.write(145, df_all.head(4))
-            # st.dataframe(df_all.tail(3))
+                if df_recent.empty:
+                    row[f"Drop % ({lb})"] = None
+                else:
+                    high = df_recent["Close"].max()
+                    row[f"Drop % ({lb})"] = round(
+                        (current_price - high) / high * 100, 2
+                    )
 
-        # cutoff = datetime.today() - timedelta(days=n_days)
-        # df_window = df_all[df_all["Date"] >= cutoff]
+            results[ticker] = (row, df_all)
+            progress.progress((i + 1) / len(tickers))
 
-        # if df_window.empty:
-        #     continue
-
-        # st.dataframe(df_all.tail(6))
-        current_price = df_all.iloc[-1]["Close"]
-        current_date = df_all.iloc[-1]["Date"]
-        # st.write(current_date, type(current_date))
-
-        
-        row_result = {"Ticker": ticker, "Current": round(current_price, 2)}
-
-        # Compute drop per selected lookback
-        for lookback in lookbacks_selected:
-            cutoff = lookback_options[lookback] # datetime.today() - timedelta(days=n_days)
-            # cutoff = cutoff.date()
-            # st.write(cutoff, cutoff.date())
-            
-            df_recent = df_all[df_all ["Date"] >= cutoff]
-            # st.write(cutoff, df_recent.shape)
-            # st.dataframe(df_recent)
-            # st.write(df_recent.tail(4))
-            if df_recent.empty:
-                row_result[lookback] = None
-                continue
-
-            highest_price = round(df_recent["Close"].max(), 2)
-            drop_pct = (current_price - highest_price) / highest_price * 100
-            row_result[f"Drop % ({lookback})"] = round(drop_pct, 2)
-            
-        results.append(row_result)
-
-
-        progress_bar.progress(i / len(tickers))
-
+    # --------------------------------------------------
+    # Results table
+    # --------------------------------------------------
     if results:
-        df_results = pd.DataFrame(results)
-
-        def highlight_drop(val):
-            color = 'red' if val < 0 else 'green'
-            return f'color: {color}'
-
+        df_results = pd.DataFrame([v[0] for v in results.values()])
         st.markdown("### Step 3: Results")
-        # st.dataframe(df_results.style.applymap(highlight_drop, subset=[f"Drop % ({n_option})"]))
-
         st.dataframe(df_results, use_container_width=True)
 
-        # # Download CSV
-        # csv = df_summary.to_csv(index=False).encode("utf-8")
-        # st.download_button("⬇ Download CSV", csv, "summary.csv", "text/csv")
-    
+        # --------------------------------------------------
+        # ZIP DOWNLOAD FROM CACHED DATA
+        # --------------------------------------------------
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for ticker, (_, df_hist) in results.items():
+                csv_bytes = df_hist.to_csv(index=False).encode("utf-8")
+                zipf.writestr(f"{ticker}.csv", csv_bytes)
+
+        zip_buffer.seek(0)
+        st.download_button(
+            "📦 Download Cached Historical Data (ZIP)",
+            data=zip_buffer,
+            file_name="cached_stock_data.zip",
+            mime="application/zip"
+        )
+
     else:
-        st.info("No data available yet.")
+        st.info("No data available")
