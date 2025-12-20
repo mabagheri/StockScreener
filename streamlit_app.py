@@ -6,17 +6,15 @@ import io
 import zipfile
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # --------------------------------------------------
 # App config
 # --------------------------------------------------
 st.set_page_config(page_title="Stock Drop Tracker", layout="wide")
-st.title("📉 Stock Drop Tracker")
+st.title("📉 Stock Drop Tracker!")
 
 DATA_FOLDER = "Stock_data"
 EXCEL_FILE = "Tickers_Info.xlsx"
-MAX_WORKERS = 8   # parallel downloads (TSX-safe)
 
 # --------------------------------------------------
 # Cached historical loader (PER TICKER)
@@ -25,12 +23,12 @@ MAX_WORKERS = 8   # parallel downloads (TSX-safe)
 def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
     """
     Load full historical data for a ticker.
-    Cached per ticker to prevent re-downloading.
+    Cached per ticker to prevent re-downloading on UI changes.
     """
 
     csv_path = os.path.join(DATA_FOLDER, f"{ticker}.csv")
 
-    # --- No CSV → full download ---
+    # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
         start_date = datetime.today() - relativedelta(years=2)
 
@@ -38,8 +36,7 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
             ticker,
             start=start_date.date(),
             end=today + timedelta(days=1),
-            progress=False,
-            threads=False
+            progress=False
         )
 
         if df.empty:
@@ -50,7 +47,7 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
         df.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
         return df
 
-    # --- CSV exists → incremental update ---
+    # --- Case 2: CSV exists → incremental update ---
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
     df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
@@ -59,14 +56,14 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
         ticker,
         start=start_date,
         end=today + timedelta(days=1),
-        progress=False,
-        threads=False
+        progress=False
     )
 
     if not df_new.empty:
         df_new = df_new.reset_index()
         df_new.columns = df_new.columns.get_level_values(0)
         df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+
         df_all = pd.concat([df_old, df_new], ignore_index=True)
         df_all = df_all.drop_duplicates(subset=["Date"])
     else:
@@ -122,7 +119,7 @@ lookbacks_selected = st.multiselect(
 )
 
 # --------------------------------------------------
-# Run
+# Run analysis
 # --------------------------------------------------
 if st.button("🚀 Run Stock Drop Analysis"):
 
@@ -134,7 +131,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
         st.stop()
 
     if "MarketCap" not in tickers_info.columns:
-        st.error("Excel must contain a MarketCap column")
+        st.error("Excel must contain a 'MarketCap' column")
         st.stop()
 
     tickers_info = filter_market_cap(tickers_info, cap_choice)
@@ -144,51 +141,50 @@ if st.button("🚀 Run Stock Drop Analysis"):
         st.warning("No tickers match selection")
         st.stop()
 
-    st.markdown("### Step 2: Downloading & Computing (Parallelized)")
+    st.markdown("### Step 2: Loading Cached Data")
 
     today = datetime.today().date()
-    results = {}
+    results = []
+    cached_histories = {}
+
     progress = st.progress(0)
 
     # --------------------------------------------------
-    # Parallel download + caching
+    # Sequential (cached) loading
     # --------------------------------------------------
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {
-            executor.submit(load_full_history, ticker, today): ticker
-            for ticker in tickers
-        }
+    for i, ticker in enumerate(tickers, start=1):
 
-        for i, future in enumerate(as_completed(futures)):
-            ticker = futures[future]
-            df_all = future.result()
+        df_all = load_full_history(ticker, today)
 
-            if df_all.empty:
-                continue
+        if df_all.empty:
+            continue
 
-            current_price = df_all.iloc[-1]["Close"]
-            row = {"Ticker": ticker, "Current": round(current_price, 2)}
+        current_price = df_all.iloc[-1]["Close"]
+        row = {"Ticker": ticker, "Current": round(current_price, 2)}
 
-            for lb in lookbacks_selected:
-                cutoff = lookback_options[lb]
-                df_recent = df_all[df_all["Date"] >= cutoff]
+        for lb in lookbacks_selected:
+            cutoff = lookback_options[lb]
+            df_recent = df_all[df_all["Date"] >= cutoff]
 
-                if df_recent.empty:
-                    row[f"Drop % ({lb})"] = None
-                else:
-                    high = df_recent["Close"].max()
-                    row[f"Drop % ({lb})"] = round(
-                        (current_price - high) / high * 100, 2
-                    )
+            if df_recent.empty:
+                row[f"Drop % ({lb})"] = None
+            else:
+                high = df_recent["Close"].max()
+                row[f"Drop % ({lb})"] = round(
+                    (current_price - high) / high * 100, 2
+                )
 
-            results[ticker] = (row, df_all)
-            progress.progress((i + 1) / len(tickers))
+        results.append(row)
+        cached_histories[ticker] = df_all
+
+        progress.progress(i / len(tickers))
 
     # --------------------------------------------------
-    # Results table
+    # Results
     # --------------------------------------------------
     if results:
-        df_results = pd.DataFrame([v[0] for v in results.values()])
+        df_results = pd.DataFrame(results)
+
         st.markdown("### Step 3: Results")
         st.dataframe(df_results, use_container_width=True)
 
@@ -197,9 +193,11 @@ if st.button("🚀 Run Stock Drop Analysis"):
         # --------------------------------------------------
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for ticker, (_, df_hist) in results.items():
-                csv_bytes = df_hist.to_csv(index=False).encode("utf-8")
-                zipf.writestr(f"{ticker}.csv", csv_bytes)
+            for ticker, df_hist in cached_histories.items():
+                zipf.writestr(
+                    f"{ticker}.csv",
+                    df_hist.to_csv(index=False).encode("utf-8")
+                )
 
         zip_buffer.seek(0)
         st.download_button(
@@ -210,4 +208,4 @@ if st.button("🚀 Run Stock Drop Analysis"):
         )
 
     else:
-        st.info("No data available")
+        st.info("No data available.")
