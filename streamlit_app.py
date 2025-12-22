@@ -125,6 +125,13 @@ if st.button("🚀 Run Stock Drop Analysis"):
         st.stop()
 
     tickers_info = filter_market_cap(tickers_info, cap_choice)
+    def logo_url(domain):
+        if pd.isna(domain):
+            return None
+        return f"https://img.logo.dev/{domain}?token={st.secrets['LOGO_DEV_API_KEY']}"
+
+    tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
+
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
 
     if not tickers:
@@ -151,7 +158,9 @@ if st.button("🚀 Run Stock Drop Analysis"):
             continue
 
         current_price = df_all.iloc[-1]["Close"]
-        row = {"Ticker": ticker, "Current": round(current_price, 2)}
+        logo = tickers_info.loc[tickers_info["Ticker"] == ticker, "Logo"].values[0]
+
+        row = {"Logo": logo, "Ticker": ticker, "Current": round(current_price, 2)}
 
         for lb in lookbacks_selected:
             cutoff = lookback_options[lb]
@@ -177,7 +186,12 @@ if st.button("🚀 Run Stock Drop Analysis"):
         df_results = pd.DataFrame(results)
 
         st.markdown("### Step 3: Results")
-        st.dataframe(df_results, use_container_width=True)
+        # st.dataframe(df_results, use_container_width=True)
+        st.dataframe(df_results,
+                     column_config={
+                         "Logo": st.column_config.ImageColumn("Logo", width="small")
+                     },
+                     use_container_width=True)
 
         # --------------------------------------------------
         # ZIP DOWNLOAD FROM CACHED DATA
