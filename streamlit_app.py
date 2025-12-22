@@ -151,7 +151,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
     # Sequential (cached) loading
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
-        tk = yf.Ticker(t)
+        tk = yf.Ticker(ticker)
         try:
             fi = tk.fast_info
         except Exception as e:
