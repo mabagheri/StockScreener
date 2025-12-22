@@ -31,8 +31,8 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
     if not os.path.exists(csv_path):
         start_date = datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
-        df = yf.download(ticker, start=start_date.date(), end=today - timedelta(days=4),  progress=False)
         status_text.text(f"Downloading {ticker} from Jan 1, 2010 ...") # ({i}/{len(tickers)})
+        df = yf.download(ticker, start=start_date, end=today - timedelta(days=4),  progress=False)
 
         if df.empty:
             return pd.DataFrame()
