@@ -158,7 +158,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
             shares = fi.get("shares_outstanding")
 
             if price is None or shares is None:
-                print(f"Missing data for {t}")
+                print(f"Missing data for {ticker}")
                 continue
 
             mcap = price * shares  # already CAD for .TO tickers
