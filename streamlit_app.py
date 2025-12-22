@@ -20,24 +20,18 @@ EXCEL_FILE = "Tickers_Info.xlsx"
 # Cached historical loader (PER TICKER)
 # --------------------------------------------------
 @st.cache_data(show_spinner=False)
-def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
+def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame:
     """
-    Load full historical data for a ticker.
-    Cached per ticker to prevent re-downloading on UI changes.
+    Load full historical data for a ticker. Cached per ticker to prevent re-downloading on UI changes.
     """
 
-    csv_path = os.path.join(DATA_FOLDER, f"{ticker}.csv")
+    csv_path = os.path.join(DATA_FOLDER, market, f"{ticker}.csv")
 
     # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
         start_date = datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
-        df = yf.download(
-            ticker,
-            start=start_date.date(),
-            end=today - timedelta(days=4),
-            progress=False
-        )
+        df = yf.download(ticker, start=start_date.date(), end=today - timedelta(days=4),  progress=False)
 
         if df.empty:
             return pd.DataFrame()
@@ -70,7 +64,6 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
         df_all = df_old
 
     return df_all
-
 
 # --------------------------------------------------
 # Market cap filter
@@ -148,13 +141,14 @@ if st.button("🚀 Run Stock Drop Analysis"):
     cached_histories = {}
 
     progress = st.progress(0)
+    status_test = st.empty()
 
     # --------------------------------------------------
     # Sequential (cached) loading
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
 
-        df_all = load_full_history(ticker, today)
+        df_all = load_full_history(ticker, today, market_choice)
 
         if df_all.empty:
             continue
