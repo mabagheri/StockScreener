@@ -68,8 +68,8 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
 def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
         return df[df["MarketCap"] > 200]
-    elif cap_choice == "Large-cap ($40B–$200B)":
-        return df[(df["MarketCap"] >= 40) & (df["MarketCap"] <= 200)]
+    elif cap_choice == "Large-cap ($10B–$200B)":
+        return df[(df["MarketCap"] >= 10) & (df["MarketCap"] <= 200)]
     elif cap_choice == "Mid-cap ($2B–$10B)":
         return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
     elif cap_choice == "Small-cap ($300M–$2B)":
@@ -151,7 +151,17 @@ if st.button("🚀 Run Stock Drop Analysis"):
     # Sequential (cached) loading
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
+        tk = yf.Ticker(t)
+        try:
+            fi = tk.fast_info
+        except Exception as e:
+            st.error(f"tk.fast_info does not exist {e}")
+        try:
+            info = tk.get_info()
+        except Exception as e:
+            st.error(f"tk.get_info() does not exist {e}")
 
+        
         df_all = load_full_history(ticker, today, market_choice)
 
         if df_all.empty:
