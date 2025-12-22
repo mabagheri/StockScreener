@@ -154,16 +154,15 @@ if st.button("🚀 Run Stock Drop Analysis"):
         try:
             tk = yf.Ticker(ticker)
             fi = tk.fast_info
-            st.write(157, ticker)
             price = fi.get("last_price") or fi.get("last_close")
             shares = fi.get("shares_outstanding")
-            st.write(160, ticker)
+            st.write(160, ticker, price, shares)
 
             if price is None or shares is None:
                 print(f"Missing data for {ticker}")
-                continue
-
-            mcap = price * shares  # already CAD for .TO tickers
+                mcap = None
+            else:
+                mcap = price * shares  # already CAD for .TO tickers
             st.write(ticker, mcap)
             
         except Exception as e:
