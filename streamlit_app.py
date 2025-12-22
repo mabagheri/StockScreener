@@ -138,7 +138,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
     cached_histories = {}
 
     progress = st.progress(0)
-    status_test = st.empty()
+    status_text = st.empty()
 
     # --------------------------------------------------
     # Sequential (cached) loading
