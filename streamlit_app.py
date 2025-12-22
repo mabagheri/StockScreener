@@ -151,21 +151,21 @@ if st.button("🚀 Run Stock Drop Analysis"):
     # Sequential (cached) loading
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
-        # tk = yf.Ticker(ticker)
-        # try:
-        #     fi = tk.fast_info
-        #     price = fi.get("last_price") or fi.get("last_close")
-        #     shares = fi.get("shares_outstanding")
+        try:
+            tk = yf.Ticker(ticker)
+            fi = tk.fast_info
+            price = fi.get("last_price") or fi.get("last_close")
+            shares = fi.get("shares_outstanding")
 
-        #     if price is None or shares is None:
-        #         print(f"Missing data for {ticker}")
-        #         continue
+            if price is None or shares is None:
+                print(f"Missing data for {ticker}")
+                continue
 
-        #     mcap = price * shares  # already CAD for .TO tickers
-        #     st.write(ticker, mcap)
+            mcap = price * shares  # already CAD for .TO tickers
+            st.write(ticker, mcap)
             
-        # except Exception as e:
-        #     st.error(f"tk.fast_info does not exist {e}")
+        except Exception as e:
+            st.error(f"tk.fast_info does not exist {e}")
 
         df_all = load_full_history(ticker, today, market_choice)
 
