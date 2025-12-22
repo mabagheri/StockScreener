@@ -30,12 +30,12 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
 
     # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
-        start_date = datetime.today() - relativedelta(years=2)
+        start_date = datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
         df = yf.download(
             ticker,
             start=start_date.date(),
-            end=today + timedelta(days=1),
+            end=today - timedelta(days=4),
             progress=False
         )
 
@@ -49,9 +49,9 @@ def load_full_history(ticker: str, today: datetime.date) -> pd.DataFrame:
 
     # --- Case 2: CSV exists → incremental update ---
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-    df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
+    # df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
-    start_date = datetime(2025, 11, 2).date()
+    start_date = df_old["Date"].iloc[-1]  # datetime(2025, 11, 2).date()
     df_new = yf.download(
         ticker,
         start=start_date,
