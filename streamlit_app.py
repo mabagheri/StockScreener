@@ -164,10 +164,9 @@ if st.button("🚀 Run Stock Drop Analysis"):
         #     mcap = price * shares  # already CAD for .TO tickers
         #     st.write(ticker, mcap)
             
-        except Exception as e:
-            st.error(f"tk.fast_info does not exist {e}")
+        # except Exception as e:
+        #     st.error(f"tk.fast_info does not exist {e}")
 
-        
         df_all = load_full_history(ticker, today, market_choice)
 
         if df_all.empty:
