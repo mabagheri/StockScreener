@@ -152,8 +152,8 @@ if st.button("🚀 Run Stock Drop Analysis"):
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
         try:
-            st.write(ticker)
             tk = yf.Ticker(ticker)
+            st.write(156, ticker)
             fi = tk.fast_info
             price = fi.get("last_price") or fi.get("last_close")
             shares = fi.get("shares_outstanding")
