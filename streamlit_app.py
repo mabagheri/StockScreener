@@ -116,6 +116,8 @@ elif market_choice in ['Canada', 'TSX']:
 market_is_open =  is_market_open(exchange)
 print("NYSE open:", is_market_open("NYSE"))
 print(market_is_open)
+st.write(119, market_is_open)
+st.write(120, "NYSE open:", is_market_open("NYSE"))
 
 
 cap_choice = st.selectbox(
