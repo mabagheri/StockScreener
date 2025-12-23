@@ -146,7 +146,7 @@ current_year = datetime.now().year # date.today().year
 start_year = st.selectbox(
     "Start downloading data from year:",
     options=list(range(2000, current_year + 1)),
-    index=list(range(2023, current_year + 1)).index(2023)
+    index=list(range(2000, current_year + 1)).index(2023)
 )
 # --------------------------------------------------
 # Run analysis
