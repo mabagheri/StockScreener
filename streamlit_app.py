@@ -21,7 +21,7 @@ EXCEL_FILE = "Tickers_Info.xlsx"
 # --------------------------------------------------
 # Cached historical loader (PER TICKER)
 # --------------------------------------------------
-@st.cache_data(show_spinner=False)
+# @st.cache_data(show_spinner=False)
 def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame:
     """
     Load full historical data for a ticker. Cached per ticker to prevent re-downloading on UI changes.
@@ -31,7 +31,7 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
 
     # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
-        start_date = datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
+        start_date = date(start_year, 1, 1)  # datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
         status_text.text(f"Data file does not exist! Downloading {ticker} from Jan 1, 2010 ...") # ({i}/{len(tickers)})
         df = yf.download(ticker, start=start_date, end=today + timedelta(days=1),  progress=False)
@@ -84,7 +84,7 @@ def filter_market_cap(df, cap_choice):
 # --------------------------------------------------
 st.markdown("### Step 1: Choose Market & Filters")
 
-market_choice = st.radio("Market", ["TSX", "US"], horizontal=True)
+market_choice = st.radio(["TSX", "US"], horizontal=True)
 
 # ---------------- Check if the market is Open ----------------
 # ET = ZoneInfo("America/New_York")  # Eastern Time
@@ -142,11 +142,17 @@ lookbacks_selected = st.multiselect(
     default=["1 Month", "6 Months", "1 Year", "2 Years"]
 )
 
+current_year = date.today().year
+start_year = st.selectbox(
+    "Start downloading data from year:",
+    options=list(range(2000, current_year + 1)),
+    index=list(range(2023, current_year + 1)).index(2023)
+)
 # --------------------------------------------------
 # Run analysis
 # --------------------------------------------------
-if st.button("🔄 Force refresh data"):
-    st.cache_data.clear()
+# if st.button("🔄 Force refresh data"):
+#     st.cache_data.clear()
 
 if st.button("🚀 Run Stock Drop Analysis"):
 
