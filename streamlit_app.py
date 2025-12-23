@@ -15,10 +15,9 @@ import pandas_market_calendars as mcal
 # --------------------------------------------------
 if "price_data" not in st.session_state:
     st.session_state.price_data = {}
-
-# if "show_logos" not in st.session_state:
-#     st.session_state.show_logos = True
     
+if "last_filters" not in st.session_state:
+    st.session_state.last_filters = None    
 # --------------------------------------------------
 # App config
 # --------------------------------------------------
@@ -87,16 +86,17 @@ start_year = st.selectbox(
 )
 start_date = date(start_year, 1, 1)
 
+col1, col2 = st.columns(2)
+with col1:
+    run = st.button("▶ Run analysis")
+with col2:
+    force_refresh = st.button("🔄 Force refresh data")
+    
 # --- Clear cached data if filters changed ---
 filters = (market, cap_choice, start_year)
-if "last_filters" not in st.session_state:
-    st.session_state.last_filters = filters
 elif st.session_state.last_filters != filters:
     st.session_state.price_data.clear()
     st.session_state.last_filters = filters
-
-force_refresh = st.button("🔄 Force refresh data")
-run = st.button("▶ Run analysis")
 
 # =====================================================================
 # 🟦 DATA LAYER (CACHED)
@@ -239,4 +239,26 @@ if st.session_state.price_data:
     #                  column_config={"Logo": st.column_config.ImageColumn("Logo", width="small")},  use_container_width=True)
     # else:
     st.dataframe(df_results, use_container_width=True)
-    
+
+# ===============================
+# 📦 ZIP DOWNLOAD
+# ===============================
+if st.session_state.price_data:
+
+    st.markdown("## 📦 Download cached CSVs")
+
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for ticker, df in st.session_state.price_data.items():
+            csv_bytes = df.to_csv(index=False).encode("utf-8")
+            zip_file.writestr(f"{ticker}.csv", csv_bytes)
+
+    zip_buffer.seek(0)
+
+    st.download_button(
+        label="⬇ Download cached CSVs (ZIP)",
+        data=zip_buffer,
+        file_name=f"stock_data_{market}.zip",
+        mime="application/zip"
+    )    
