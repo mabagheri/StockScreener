@@ -4,7 +4,7 @@ import yfinance as yf
 import os
 import io
 import zipfile
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import pytz
 import pandas_market_calendars as mcal
@@ -142,7 +142,7 @@ lookbacks_selected = st.multiselect(
     default=["1 Month", "6 Months", "1 Year", "2 Years"]
 )
 
-current_year = date.today().year
+current_year = datetime.now().year # date.today().year
 start_year = st.selectbox(
     "Start downloading data from year:",
     options=list(range(2000, current_year + 1)),
