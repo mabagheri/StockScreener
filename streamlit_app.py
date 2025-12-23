@@ -8,7 +8,17 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 import pytz
 import pandas_market_calendars as mcal
+# from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# --------------------------------------------------
+# 🔹 Session state initialization
+# --------------------------------------------------
+if "price_data" not in st.session_state:
+    st.session_state.price_data = {}
+
+if "show_logos" not in st.session_state:
+    st.session_state.show_logos = True
+    
 # --------------------------------------------------
 # App config
 # --------------------------------------------------
@@ -19,101 +29,32 @@ DATA_FOLDER = "Stock_data"
 EXCEL_FILE = "Tickers_Info.xlsx"
 
 # --------------------------------------------------
-# Cached historical loader (PER TICKER)
+# Step 1: UI Layer 
 # --------------------------------------------------
-@st.cache_data(show_spinner=False)
-def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame:
-    """
-    Load full historical data for a ticker. Cached per ticker to prevent re-downloading on UI changes.
-    """
-
-    csv_path = os.path.join(DATA_FOLDER, market, f"{ticker}.csv")
-
-    # --- Case 1: No CSV → full download ---
-    if not os.path.exists(csv_path):
-        start_date = datetime(start_year, 1, 1).date()   # datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
-
-        status_text.text(f"Data file does not exist! Downloading {ticker} from {int(start_year)} ...") # ({i}/{len(tickers)})
-        df = yf.download(ticker, start=start_date, end=today + timedelta(days=1),  progress=False)
-
-        if df.empty:
-            return pd.DataFrame()
-
-        df = df.reset_index()
-        df.columns = df.columns.get_level_values(0)
-        df.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-        return df
-
-    # --- Case 2: CSV exists → incremental update ---
-    df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-    # df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
-
-    last_date = df_old["Date"].iloc[-1]  # datetime(2025, 11, 2).date()
-    status_text.text(f"{ticker} data exists! Downloading the last unavailable few days ...") # ({i}/{len(tickers)})
-    df_new = yf.download(ticker, start=last_date, end=today + timedelta(days=1), progress=False)
-
-    if not df_new.empty:
-        df_new = df_new.reset_index()
-        df_new.columns = df_new.columns.get_level_values(0)
-        df_new.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
-
-        df_all = pd.concat([df_old, df_new], ignore_index=True)
-        df_all = df_all.drop_duplicates(subset=["Date"])
-    else:
-        df_all = df_old
-
-    return df_all
-
-# --------------------------------------------------
-# Market cap filter
-# --------------------------------------------------
-def filter_market_cap(df, cap_choice):
-    if cap_choice == "Mega-cap (> $200B)":
-        return df[df["MarketCap"] > 200]
-    elif cap_choice == "Large-cap ($10B–$200B)":
-        return df[(df["MarketCap"] >= 10) & (df["MarketCap"] <= 200)]
-    elif cap_choice == "Mid-cap ($2B–$10B)":
-        return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
-    elif cap_choice == "Small-cap ($300M–$2B)":
-        return df[(df["MarketCap"] >= 0.3) & (df["MarketCap"] < 2)]
-    return df
-
-
-# --------------------------------------------------
-# UI – Step 1
-# --------------------------------------------------
-st.markdown("### Step 1: Choose Market & Filters")
+# st.markdown("### Step 1: Choose Market & Filters")
 
 market_choice = st.radio("Choose Market:", ["TSX", "US"], horizontal=True)
 
 # ---------------- Check if the market is Open ----------------
-# ET = ZoneInfo("America/New_York")  # Eastern Time
-# now_et = datetime.now(ET)
+# ET = ZoneInfo("America/New_York")  # Eastern Time Python > 3.9 
 ET = pytz.timezone("US/Eastern")
 now_et = datetime.now(ET)
 
 def is_market_open(exchange: str) -> bool:
     cal = mcal.get_calendar(exchange)
-
-    schedule = cal.schedule(
-        start_date=now_et.date(),
-        end_date=now_et.date() )
-
+    schedule = cal.schedule(start_date=now_et.date(), end_date=now_et.date())
     if schedule.empty:
         return False
-
     open_time = schedule.iloc[0]["market_open"].tz_convert(ET)
     close_time = schedule.iloc[0]["market_close"].tz_convert(ET)
-
     return open_time <= now_et <= close_time
 
 # ---- CHECK ----
-if market_choice in ['US', 'QQQ', 'NYSE', 'SPY']:
-    exchange = 'NYSE'
-elif market_choice in ['Canada', 'TSX']:
-    exchange = "TSX"
-    
-market_is_open =  is_market_open(exchange)
+# if market_choice in ['US', 'QQQ', 'NYSE', 'SPY']:
+#     exchange = 'NYSE'
+# elif market_choice in ['Canada', 'TSX']:
+#     exchange = "TSX" 
+# market_is_open =  is_market_open(exchange)
 # print("NYSE open:", is_market_open("NYSE"))
 
 cap_choice = st.selectbox(
@@ -148,117 +89,145 @@ start_year = st.selectbox(
     options=list(range(2000, current_year + 1)),
     index=list(range(2000, current_year + 1)).index(2023)
 )
-# --------------------------------------------------
-# Run analysis
-# --------------------------------------------------
-if st.button("🔄 Force refresh data"):
-    st.cache_data.clear()
+start_date = date(start_year, 1, 1)
 
-if st.button("🚀 Run Stock Drop Analysis"):
+force_refresh = st.button("🔄 Force refresh data")
+run = st.button("▶ Run analysis")
 
-    # --- Load tickers ---
-    try:
-        tickers_info = pd.read_excel(EXCEL_FILE, sheet_name=market_choice)
-    except Exception as e:
-        st.error(f"Excel error: {e}")
-        st.stop()
+# =====================================================================
+# 🟦 DATA LAYER (CACHED)
+# =====================================================================
+# First, 
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_from_yahoo(ticker, start_date, end_date):
+    df = yf.download(ticker, start=start_date, end=end_date, progress=False)
 
-    if "MarketCap" not in tickers_info.columns:
-        st.error("Excel must contain a 'MarketCap' column")
-        st.stop()
+    if df.empty:
+        return None
 
-    tickers_info = filter_market_cap(tickers_info, cap_choice).reset_index(drop=True)
-    # def logo_url(domain):
-    #     if pd.isna(domain):
-    #         return None
-    #     return f"https://img.logo.dev/{domain}?token={st.secrets['LOGO_DEV_API_KEY']}"
+    df = df.reset_index()
+    df.columns = ["Date", "Close", "High", "Low", "Open", "Volume"]
+    return df
 
-    # tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
+def filter_market_cap(df, cap_choice):
+    if cap_choice == "Mega-cap (> $200B)":
+        return df[df["MarketCap"] > 200]
+    if cap_choice == "Large-cap ($10B–$200B)":
+        return df[(df["MarketCap"] >= 10) & (df["MarketCap"] <= 200)]
+    if cap_choice == "Mid-cap ($2B–$10B)":
+        return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
+    if cap_choice == "Small-cap ($300M–$2B)":
+        return df[(df["MarketCap"] >= 0.3) & (df["MarketCap"] < 2)]
+    return df
 
-    tickers = tickers_info["Ticker"].dropna().unique().tolist()  #[:10]
-    # tickers = ['RY.to', 'AC.to']
-    
-    if not tickers:
-        st.warning("No tickers match selection")
-        st.stop()
+# ✅ Load or update CSV per ticker
+def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
+    csv_path = os.path.join(DATA_FOLDER, f"{ticker}.csv")
 
-    st.markdown("### Step 2: Loading Cached Data")
+    # --- Force refresh: ignore CSV ---
+    if force_refresh or not os.path.exists(csv_path):
+        df = fetch_from_yahoo(ticker, start_date, end_date)
+        if df is not None:
+            df.to_csv(csv_path, index=False)
+        return df
 
-    today = datetime.today().date()
-    results = []
-    cached_histories = {}
+    # --- Load existing CSV ---
+    df_old = pd.read_csv(csv_path, parse_dates=["Date"])
+
+    last_date = df_old["Date"].max().date()
+
+    # --- Already up to date ---
+    if last_date >= end_date - timedelta(days=1):
+        return df_old
+
+    # --- Download missing dates ---
+    df_new = fetch_from_yahoo(ticker, last_date + timedelta(days=1), end_date)
+
+    if df_new is None:
+        return df_old
+
+    df_all = pd.concat([df_old, df_new], ignore_index=True)
+    df_all = df_all.drop_duplicates(subset=["Date"])
+
+    # df_all.to_csv(csv_path, index=False)
+    return df_all
+
+# ====================================================================
+# 🟦 COMPUTE LAYER
+# ===================================================================
+def compute_drops(df, lookbacks):
+    current = df.iloc[-1]["Close"]
+    out = {"Current": round(current, 2)}
+
+    for name, cutoff in lookbacks.items():
+        recent = df[df["Date"] >= cutoff]
+        if recent.empty:
+            out[f"Drop % ({name})"] = None
+        else:
+            high = recent["Close"].max()
+            out[f"Drop % ({name})"] = round((current - high) / high * 100, 2)
+
+    return out
+
+# ===============================
+# ▶ RUN LOGIC
+# ===============================
+if run or force_refresh:
+
+    if force_refresh:
+        st.session_state.price_data.clear()
+        st.cache_data.clear()
+
+    tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name=market)
+    tickers_info = filter_market_cap(tickers_info, cap_choice)
+
+    tickers = tickers_info["Ticker"].dropna().unique().tolist()
+    end_date = date.today() + timedelta(days=1)
+
+    st.markdown("## Step 2: Loading price data")
 
     progress = st.progress(0)
-    status_text = st.empty()
 
-    # --------------------------------------------------
-    # Sequential (cached) loading
-    # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
-        try:
-            tk = yf.Ticker(ticker)
-            fi = tk.fast_info
-            mcap = round(fi.market_cap/1e9, 2)
-            # st.write(160, ticker, price, shares, mcap)            
-        except Exception as e:
-            st.error(f"tk.fast_info does not exist {e}")
 
-        df_all = load_full_history(ticker, today, market_choice)
+        if ticker not in st.session_state.price_data:
+            df = load_or_update_csv(ticker, start_date, end_date, force_refresh=force_refresh)
 
-        if df_all.empty:
-            continue
-
-        current_price = df_all.iloc[-1]["Close"]
-        # mcap_ticker = tickers_info['MarketCap'].iloc[i] 
-        # logo = tickers_info.loc[tickers_info["Ticker"] == ticker, "Logo"].values[0]
-        # row = {"Logo": logo, "Ticker": ticker, "Current": round(current_price, 2)}
-        row = {"Ticker": ticker, "MarketCap (B)": mcap, "Current": round(current_price, 2)}
-
-        for lb in lookbacks_selected:
-            cutoff = lookback_options[lb]
-            df_recent = df_all[df_all["Date"] >= cutoff]
-
-            if df_recent.empty:
-                row[f"% Drop ({lb})"] = None
-            else:
-                high = df_recent["Close"].max()
-                row[f"% Drop ({lb})"] = round((current_price - high) / high * 100, 2)
-
-        results.append(row)
-        cached_histories[ticker] = df_all
+            if df is not None:
+                st.session_state.price_data[ticker] = df
 
         progress.progress(i / len(tickers))
 
-    # --------------------------------------------------
-    # Results
-    # --------------------------------------------------
-    if results:
-        df_results = pd.DataFrame(results)
+# ===============================
+# 📊 RESULTS
+# ===============================
+if st.session_state.price_data:
 
-        st.markdown("### Step 3: Results")
-        st.dataframe(df_results, use_container_width=True)
-        # st.dataframe(df_results,
-        #              column_config={"Logo": st.column_config.ImageColumn("Logo", width="small") },
-        #              use_container_width=True)
+    results = []
 
-        # --------------------------------------------------
-        # ZIP DOWNLOAD FROM CACHED DATA
-        # --------------------------------------------------
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for ticker, df_hist in cached_histories.items():
-                zipf.writestr(
-                    f"{ticker}.csv",
-                    df_hist.to_csv(index=False).encode("utf-8")
-                )
-
-        zip_buffer.seek(0)
-        st.download_button(
-            "📦 Download Cached Historical Data (ZIP)",
-            data=zip_buffer,
-            file_name="cached_stock_data.zip",
-            mime="application/zip"
+    for ticker, df in st.session_state.price_data.items():
+        row = {"Ticker": ticker}
+        row.update(
+            compute_drops(
+                df,
+                {k: lookbacks[k] for k in selected_lookbacks}
+            )
         )
+        results.append(row)
 
+    df_results = pd.DataFrame(results)
+
+    st.markdown("## Step 3: Results")
+
+    if st.session_state.show_logos:
+        tickers_info["Logo"] = tickers_info["Domain"].apply(
+            lambda d: f"https://img.logo.dev/{d}?token={st.secrets['LOGO_DEV_API_KEY']}"
+            if pd.notna(d) else None)
+
+        df_results = df_results.merge(tickers_info[["Ticker", "Logo"]], on="Ticker", how="left")
+
+        st.dataframe(df_results,
+                     column_config={"Logo": st.column_config.ImageColumn("Logo", width="small")},  use_container_width=True)
     else:
-        st.info("No data available.")
+        st.dataframe(df_results, use_container_width=True)
+    
