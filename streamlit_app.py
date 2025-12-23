@@ -214,7 +214,7 @@ if st.session_state.price_data:
         row.update(
             compute_drops(
                 df,
-                {k: lookbacks[k] for k in lookbacks_selected}
+                {k: lookback_options [k] for k in lookbacks_selected}
             )
         )
         results.append(row)
