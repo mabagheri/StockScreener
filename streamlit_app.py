@@ -86,11 +86,11 @@ start_year = st.selectbox(
 )
 start_date = date(start_year, 1, 1)
 
-col1, col2 = st.columns(2)
-with col1:
-    run = st.button("▶ Run analysis")
-with col2:
-    force_refresh = st.button("🔄 Force refresh data")
+# col1, col2 = st.columns(2)
+# with col1:
+run = st.button("▶ Run analysis")
+# with col2:
+force_refresh = st.button("🔄 Force refresh data")
     
 # --- Clear cached data if filters changed ---
 filters = (market_choice, cap_choice, start_year)
