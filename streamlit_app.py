@@ -172,10 +172,10 @@ def compute_drops(df, lookbacks):
         else:
             display_name = name
         if recent.empty:
-            out[f"Drop% ({display_name})"] = None
+            out[f"Drop%: {display_name}"] = None
         else:
             high = recent["Close"].max()
-            out[f"Drop% ({display_name})"] = round((current - high) / high * 100, 2)
+            out[f"Drop%: {display_name}"] = round((current - high) / high * 100, 2)
 
     return out
 
