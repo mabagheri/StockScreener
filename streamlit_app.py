@@ -169,9 +169,8 @@ if st.button("🚀 Run Stock Drop Analysis"):
 
     # tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
 
-    tickers = tickers_info["Ticker"].dropna().unique().tolist()[:5]
+    tickers = tickers_info["Ticker"].dropna().unique().tolist()[:10]
     # tickers = ['RY.to', 'AC.to']
-    print(tickers[::4])
     
     if not tickers:
         st.warning("No tickers match selection")
@@ -190,12 +189,15 @@ if st.button("🚀 Run Stock Drop Analysis"):
     # Sequential (cached) loading
     # --------------------------------------------------
     for i, ticker in enumerate(tickers, start=1):
-        # try:
-        #     tk = yf.Ticker(ticker)
-        #     fi = tk.fast_info
-        #     price = fi.get("last_price") or fi.get("last_close")
-        #     shares = fi.get("shares_outstanding")
-        #     st.write(160, ticker, price, shares)
+        try:
+            tk = yf.Ticker(ticker)
+            fi = tk.fast_info
+            price = fi.get("last_price") or fi.get("last_close")
+            shares = fi.get("shares_outstanding")
+            mcap = fi.get("marketCap")
+            mcap2 = fi.marketCap
+            st.write(fi)
+            st.write(160, ticker, price, shares, mcap, mcap2)
 
         #     if price is None or shares is None:
         #         print(f"Missing data for {ticker}")
