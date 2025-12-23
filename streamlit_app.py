@@ -59,13 +59,11 @@ def is_market_open(exchange: str) -> bool:
 
 cap_choice = st.selectbox(
     "Market Cap",
-    [
-        "All",
+    [    "All",
         "Mega-cap (> $200B)",
         "Large-cap ($40B–$200B)",
         "Mid-cap ($2B–$10B)",
-        "Small-cap ($300M–$2B)"
-    ]
+        "Small-cap ($300M–$2B)"    ]
 )
 
 lookback_options = {
@@ -74,13 +72,11 @@ lookback_options = {
     "6 Months": datetime.today() - relativedelta(months=6),
     "1 Year": datetime.today() - relativedelta(years=1),
     "2 Years": datetime.today() - relativedelta(years=2)
-
 }
 
 lookbacks_selected = st.multiselect(
-    "Lookback Periods",
-    list(lookback_options.keys()),
-    default=["1 Month", "6 Months", "1 Year", "2 Years"]
+    "Lookback Periods", 
+    list(lookback_options.keys()), default=["1 Month", "6 Months", "1 Year", "2 Years"]
 )
 
 current_year = datetime.now().year # date.today().year
@@ -90,6 +86,14 @@ start_year = st.selectbox(
     index=list(range(2000, current_year + 1)).index(2023)
 )
 start_date = date(start_year, 1, 1)
+
+# --- Clear cached data if filters changed ---
+filters = (market, cap_choice, start_year)
+if "last_filters" not in st.session_state:
+    st.session_state.last_filters = filters
+elif st.session_state.last_filters != filters:
+    st.session_state.price_data.clear()
+    st.session_state.last_filters = filters
 
 force_refresh = st.button("🔄 Force refresh data")
 run = st.button("▶ Run analysis")
