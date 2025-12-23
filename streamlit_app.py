@@ -178,8 +178,12 @@ if run or force_refresh:
         st.session_state.price_data.clear()
         st.cache_data.clear()
 
-    tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name=market)
-    tickers_info = filter_market_cap(tickers_info, cap_choice)
+    tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name=market_choice)
+    if "MarketCap" not in tickers_info.columns:
+        st.error("Excel must contain a 'MarketCap' column")
+        st.stop()
+
+    tickers_info = filter_market_cap(tickers_info, cap_choice).reset_index(drop=True)
 
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
     end_date = date.today() + timedelta(days=1)
