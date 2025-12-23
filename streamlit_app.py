@@ -6,6 +6,10 @@ import io
 import zipfile
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from zoneinfo import ZoneInfo
+import pandas_market_calendars as mcal
+from zoneinfo import ZoneInfo
+import pandas_market_calendars as mcal
 
 # --------------------------------------------------
 # App config
@@ -84,6 +88,36 @@ st.markdown("### Step 1: Choose Market & Filters")
 
 market_choice = st.radio("Market", ["TSX", "US"], horizontal=True)
 
+# ---------------- Check if the market is Open ----------------
+ET = ZoneInfo("America/New_York")  # Eastern Time
+now_et = datetime.now(ET)
+
+def is_market_open(exchange: str) -> bool:
+    cal = mcal.get_calendar(exchange)
+
+    schedule = cal.schedule(
+        start_date=now_et.date(),
+        end_date=now_et.date() )
+
+    if schedule.empty:
+        return False
+
+    open_time = schedule.iloc[0]["market_open"].tz_convert(ET)
+    close_time = schedule.iloc[0]["market_close"].tz_convert(ET)
+
+    return open_time <= now_et <= close_time
+
+# ---- CHECK ----
+if market_choice in ['US', 'QQQ', 'NYSE', 'SPY']:
+    exchange = 'NYSE'
+elif market_choice in ['Canada', 'TSX']:
+    exchange = "TSX"
+    
+market_is_open =  is_market_open(exchange)
+print("NYSE open:", is_market_open("NYSE"))
+print(market_is_open)
+
+
 cap_choice = st.selectbox(
     "Market Cap",
     [
@@ -133,7 +167,8 @@ if st.button("🚀 Run Stock Drop Analysis"):
     tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
 
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
-
+    tickers = ['RY.to', 'AC.to']
+    
     if not tickers:
         st.warning("No tickers match selection")
         st.stop()
