@@ -16,8 +16,8 @@ import pandas_market_calendars as mcal
 if "price_data" not in st.session_state:
     st.session_state.price_data = {}
 
-if "show_logos" not in st.session_state:
-    st.session_state.show_logos = True
+# if "show_logos" not in st.session_state:
+#     st.session_state.show_logos = True
     
 # --------------------------------------------------
 # App config
@@ -126,6 +126,7 @@ def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
 
     # --- Force refresh: ignore CSV ---
     if force_refresh or not os.path.exists(csv_path):
+        status_text.text(f"Downloading {ticker} from {int(start_year)} ...") # ({i}/{len(tickers)})
         df = fetch_from_yahoo(ticker, start_date, end_date)
         if df is not None:
             df.to_csv(csv_path, index=False)
@@ -133,14 +134,13 @@ def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
 
     # --- Load existing CSV ---
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
-
     last_date = df_old["Date"].max().date()
-
     # --- Already up to date ---
     if last_date >= end_date - timedelta(days=1):
         return df_old
 
     # --- Download missing dates ---
+    status_text.text(f"{ticker} data exists! Downloading the last unavailable few days ...") # ({i}/{len(tickers)})
     df_new = fetch_from_yahoo(ticker, last_date + timedelta(days=1), end_date)
 
     if df_new is None:
@@ -191,6 +191,7 @@ if run or force_refresh:
     st.markdown("## Step 2: Loading price data")
 
     progress = st.progress(0)
+    status_text = st.empty()
 
     for i, ticker in enumerate(tickers, start=1):
 
@@ -223,15 +224,15 @@ if st.session_state.price_data:
 
     st.markdown("## Step 3: Results")
 
-    if st.session_state.show_logos:
-        tickers_info["Logo"] = tickers_info["Domain"].apply(
-            lambda d: f"https://img.logo.dev/{d}?token={st.secrets['LOGO_DEV_API_KEY']}"
-            if pd.notna(d) else None)
+    # if st.session_state.show_logos:
+    #     tickers_info["Logo"] = tickers_info["Domain"].apply(
+    #         lambda d: f"https://img.logo.dev/{d}?token={st.secrets['LOGO_DEV_API_KEY']}"
+    #         if pd.notna(d) else None)
 
-        df_results = df_results.merge(tickers_info[["Ticker", "Logo"]], on="Ticker", how="left")
+    #     df_results = df_results.merge(tickers_info[["Ticker", "Logo"]], on="Ticker", how="left")
 
-        st.dataframe(df_results,
-                     column_config={"Logo": st.column_config.ImageColumn("Logo", width="small")},  use_container_width=True)
-    else:
-        st.dataframe(df_results, use_container_width=True)
+    #     st.dataframe(df_results,
+    #                  column_config={"Logo": st.column_config.ImageColumn("Logo", width="small")},  use_container_width=True)
+    # else:
+    st.dataframe(df_results, use_container_width=True)
     
