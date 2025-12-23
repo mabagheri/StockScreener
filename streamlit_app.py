@@ -145,6 +145,9 @@ lookbacks_selected = st.multiselect(
 # --------------------------------------------------
 # Run analysis
 # --------------------------------------------------
+if st.button("🔄 Force refresh data"):
+    st.cache_data.clear()
+
 if st.button("🚀 Run Stock Drop Analysis"):
 
     # --- Load tickers ---
