@@ -166,8 +166,9 @@ if st.button("🚀 Run Stock Drop Analysis"):
 
     tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
 
-    tickers = tickers_info["Ticker"].dropna().unique().tolist()
-    tickers = ['RY.to', 'AC.to']
+    tickers = tickers_info["Ticker"].dropna().unique().tolist()[:5]
+    # tickers = ['RY.to', 'AC.to']
+    print(tickers[::4])
     
     if not tickers:
         st.warning("No tickers match selection")
