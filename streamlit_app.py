@@ -6,7 +6,7 @@ import io
 import zipfile
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-# from zoneinfo import ZoneInfo
+from zoneinfo import pytz
 import pandas_market_calendars as mcal
 
 # --------------------------------------------------
@@ -87,8 +87,10 @@ st.markdown("### Step 1: Choose Market & Filters")
 market_choice = st.radio("Market", ["TSX", "US"], horizontal=True)
 
 # ---------------- Check if the market is Open ----------------
-ET = ZoneInfo("America/New_York")  # Eastern Time
-now_et = datetime.now(ET)
+# ET = ZoneInfo("America/New_York")  # Eastern Time
+# now_et = datetime.now(ET)
+et = pytz.timezone("US/Eastern")
+now_et = datetime.now(et)
 
 def is_market_open(exchange: str) -> bool:
     cal = mcal.get_calendar(exchange)
