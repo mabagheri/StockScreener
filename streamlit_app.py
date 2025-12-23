@@ -169,7 +169,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
 
     # tickers_info["Logo"] = tickers_info["Domain"].apply(logo_url)
 
-    tickers = tickers_info["Ticker"].dropna().unique().tolist()[:10]
+    tickers = tickers_info["Ticker"].dropna().unique().tolist()  #[:10]
     # tickers = ['RY.to', 'AC.to']
     
     if not tickers:
@@ -192,19 +192,8 @@ if st.button("🚀 Run Stock Drop Analysis"):
         try:
             tk = yf.Ticker(ticker)
             fi = tk.fast_info
-            price = fi.get("last_price") or fi.get("last_close")
-            shares = fi.get("shares_outstanding")
-            # mcap = fi.get("marketCap")
-            mcap2 = fi.market_cap
-            st.write(fi)
-            st.write(160, ticker, price, shares, mcap2)
-
-        #     if price is None or shares is None:
-        #         print(f"Missing data for {ticker}")
-        #         mcap = 0
-        #     else:
-        #         mcap = price * shares  # already CAD for .TO tickers
-        #     st.write(ticker, mcap)
+            mcap = fi.market_cap
+            # st.write(160, ticker, price, shares, mcap)
             
         except Exception as e:
             st.error(f"tk.fast_info does not exist {e}")
@@ -215,10 +204,10 @@ if st.button("🚀 Run Stock Drop Analysis"):
             continue
 
         current_price = df_all.iloc[-1]["Close"]
-        mcap_ticker = tickers_info['MarketCap'].iloc[i] 
+        # mcap_ticker = tickers_info['MarketCap'].iloc[i] 
         # logo = tickers_info.loc[tickers_info["Ticker"] == ticker, "Logo"].values[0]
         # row = {"Logo": logo, "Ticker": ticker, "Current": round(current_price, 2)}
-        row = {"Ticker": ticker, "MarketCap": mcap_ticker, "Current": round(current_price, 2)}
+        row = {"Ticker": ticker, "MarketCap": mcap, "Current": round(current_price, 2)}
 
         for lb in lookbacks_selected:
             cutoff = lookback_options[lb]
