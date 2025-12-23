@@ -31,7 +31,6 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
 
     # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
-        st.write(34, start_year)
         start_date = datetime(start_year, 1, 1).date()   # datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
         status_text.text(f"Data file does not exist! Downloading {ticker} from Jan 1, 2010 ...") # ({i}/{len(tickers)})
