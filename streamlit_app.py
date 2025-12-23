@@ -21,7 +21,7 @@ EXCEL_FILE = "Tickers_Info.xlsx"
 # --------------------------------------------------
 # Cached historical loader (PER TICKER)
 # --------------------------------------------------
-# @st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame:
     """
     Load full historical data for a ticker. Cached per ticker to prevent re-downloading on UI changes.
@@ -151,8 +151,8 @@ start_year = st.selectbox(
 # --------------------------------------------------
 # Run analysis
 # --------------------------------------------------
-# if st.button("🔄 Force refresh data"):
-#     st.cache_data.clear()
+if st.button("🔄 Force refresh data"):
+    st.cache_data.clear()
 
 if st.button("🚀 Run Stock Drop Analysis"):
 
