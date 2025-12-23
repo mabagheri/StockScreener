@@ -94,7 +94,7 @@ force_refresh = st.button("🔄 Force refresh data")
     
 # --- Clear cached data if filters changed ---
 filters = (market_choice, cap_choice, start_year)
-elif st.session_state.last_filters != filters:
+if st.session_state.last_filters != filters:
     st.session_state.price_data.clear()
     st.session_state.last_filters = filters
 
