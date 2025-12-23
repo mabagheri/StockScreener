@@ -49,7 +49,6 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
     # df_old = df_old[df_old["Date"] <= pd.Timestamp("2025-11-01")]
 
     last_date = df_old["Date"].iloc[-1]  # datetime(2025, 11, 2).date()
-    start_date == date.today()
     status_text.text(f"{ticker} data exists! Downloading the last unavailable few days ...") # ({i}/{len(tickers)})
     df_new = yf.download(ticker, start=last_date, end=today + timedelta(days=1), progress=False)
 
