@@ -4,7 +4,7 @@ import yfinance as yf
 import os
 import io
 import zipfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 import pytz
 import pandas_market_calendars as mcal
@@ -32,7 +32,7 @@ def load_full_history(ticker: str, today: datetime.date, market) -> pd.DataFrame
     # --- Case 1: No CSV → full download ---
     if not os.path.exists(csv_path):
         st.write(34, start_year)
-        start_date = date(start_year, 1, 1)  # datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
+        start_date = datetime(start_year, 1, 1).date()   # datetime(2010, 1, 1).date()  # datetime.today() - relativedelta(years=2)
 
         status_text.text(f"Data file does not exist! Downloading {ticker} from Jan 1, 2010 ...") # ({i}/{len(tickers)})
         df = yf.download(ticker, start=start_date, end=today + timedelta(days=1),  progress=False)
