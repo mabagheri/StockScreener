@@ -89,8 +89,8 @@ market_choice = st.radio("Market", ["TSX", "US"], horizontal=True)
 # ---------------- Check if the market is Open ----------------
 # ET = ZoneInfo("America/New_York")  # Eastern Time
 # now_et = datetime.now(ET)
-et = pytz.timezone("US/Eastern")
-now_et = datetime.now(et)
+ET = pytz.timezone("US/Eastern")
+now_et = datetime.now(ET)
 
 def is_market_open(exchange: str) -> bool:
     cal = mcal.get_calendar(exchange)
