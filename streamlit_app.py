@@ -4,7 +4,7 @@ import yfinance as yf
 import os
 import io
 import zipfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 import pytz
 import pandas_market_calendars as mcal
