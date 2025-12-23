@@ -131,13 +131,15 @@ lookback_options = {
     "1 Week": datetime.today() - relativedelta(days=7),
     "1 Month": datetime.today() - relativedelta(months=1),
     "6 Months": datetime.today() - relativedelta(months=6),
-    "1 Year": datetime.today() - relativedelta(years=1)
+    "1 Year": datetime.today() - relativedelta(years=1),
+    "2 Years": datetime.today() - relativedelta(years=2)
+
 }
 
 lookbacks_selected = st.multiselect(
     "Lookback Periods",
     list(lookback_options.keys()),
-    default=["1 Month", "6 Months", "1 Year"]
+    default=["1 Month", "6 Months", "1 Year", "2 Years"]
 )
 
 # --------------------------------------------------
@@ -156,7 +158,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
         st.error("Excel must contain a 'MarketCap' column")
         st.stop()
 
-    tickers_info = filter_market_cap(tickers_info, cap_choice)
+    tickers_info = filter_market_cap(tickers_info, cap_choice).reset_index(drop=True)
     # def logo_url(domain):
     #     if pd.isna(domain):
     #         return None
@@ -208,21 +210,20 @@ if st.button("🚀 Run Stock Drop Analysis"):
             continue
 
         current_price = df_all.iloc[-1]["Close"]
+        mcap_ticker = tickers_info['MarketCap'].iloc[i] 
         # logo = tickers_info.loc[tickers_info["Ticker"] == ticker, "Logo"].values[0]
         # row = {"Logo": logo, "Ticker": ticker, "Current": round(current_price, 2)}
-        row = {"Ticker": ticker, "Current": round(current_price, 2)}
+        row = {"Ticker": ticker, "MarketCap": mcap_ticker, "Current": round(current_price, 2)}
 
         for lb in lookbacks_selected:
             cutoff = lookback_options[lb]
             df_recent = df_all[df_all["Date"] >= cutoff]
 
             if df_recent.empty:
-                row[f"Drop % ({lb})"] = None
+                row[f"% Drop ({lb})"] = None
             else:
                 high = df_recent["Close"].max()
-                row[f"Drop % ({lb})"] = round(
-                    (current_price - high) / high * 100, 2
-                )
+                row[f"% Drop ({lb})"] = round((current_price - high) / high * 100, 2)
 
         results.append(row)
         cached_histories[ticker] = df_all
