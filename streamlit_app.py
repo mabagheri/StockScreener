@@ -6,7 +6,7 @@ import io
 import zipfile
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from zoneinfo import pytz
+import pytz
 import pandas_market_calendars as mcal
 
 # --------------------------------------------------
