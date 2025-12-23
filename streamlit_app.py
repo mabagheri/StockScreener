@@ -192,9 +192,8 @@ if st.button("🚀 Run Stock Drop Analysis"):
         try:
             tk = yf.Ticker(ticker)
             fi = tk.fast_info
-            mcap = fi.market_cap
-            # st.write(160, ticker, price, shares, mcap)
-            
+            mcap = round(fi.market_cap/1e9, 2)
+            # st.write(160, ticker, price, shares, mcap)            
         except Exception as e:
             st.error(f"tk.fast_info does not exist {e}")
 
@@ -207,7 +206,7 @@ if st.button("🚀 Run Stock Drop Analysis"):
         # mcap_ticker = tickers_info['MarketCap'].iloc[i] 
         # logo = tickers_info.loc[tickers_info["Ticker"] == ticker, "Logo"].values[0]
         # row = {"Logo": logo, "Ticker": ticker, "Current": round(current_price, 2)}
-        row = {"Ticker": ticker, "MarketCap": mcap, "Current": round(current_price, 2)}
+        row = {"Ticker": ticker, "MarketCap (B)": mcap, "Current": round(current_price, 2)}
 
         for lb in lookbacks_selected:
             cutoff = lookback_options[lb]
