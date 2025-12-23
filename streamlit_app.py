@@ -165,11 +165,17 @@ def compute_drops(df, lookbacks):
 
     for name, cutoff in lookbacks.items():
         recent = df[df["Date"] >= cutoff]
+        if name == "2 Years":
+            display_name = '2Yrs'
+        elif name == "1 Year":
+            display_name = '1Yr'
+        else:
+            display_name = name
         if recent.empty:
-            out[f"Drop % ({name})"] = None
+            out[f"Drop% ({display_name})"] = None
         else:
             high = recent["Close"].max()
-            out[f"Drop % ({name})"] = round((current - high) / high * 100, 2)
+            out[f"Drop% ({display_name})"] = round((current - high) / high * 100, 2)
 
     return out
 
