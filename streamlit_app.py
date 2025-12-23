@@ -194,10 +194,10 @@ if st.button("🚀 Run Stock Drop Analysis"):
             fi = tk.fast_info
             price = fi.get("last_price") or fi.get("last_close")
             shares = fi.get("shares_outstanding")
-            mcap = fi.get("marketCap")
-            mcap2 = fi.marketCap
+            # mcap = fi.get("marketCap")
+            mcap2 = fi.market_cap
             st.write(fi)
-            st.write(160, ticker, price, shares, mcap, mcap2)
+            st.write(160, ticker, price, shares, mcap2)
 
         #     if price is None or shares is None:
         #         print(f"Missing data for {ticker}")
