@@ -84,7 +84,7 @@ def filter_market_cap(df, cap_choice):
 # --------------------------------------------------
 st.markdown("### Step 1: Choose Market & Filters")
 
-market_choice = st.radio(["TSX", "US"], horizontal=True)
+market_choice = st.radio("Choose Market:", ["TSX", "US"], horizontal=True)
 
 # ---------------- Check if the market is Open ----------------
 # ET = ZoneInfo("America/New_York")  # Eastern Time
