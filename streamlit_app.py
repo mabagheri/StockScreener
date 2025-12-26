@@ -75,7 +75,7 @@ lookback_options = {
 
 lookbacks_selected = st.multiselect(
     "Lookback Periods", 
-    list(lookback_options.keys()), default=["1 Month", "6 Months", "1 Year", "2 Years"]
+    list(lookback_options.keys()), default=["1 Month", "1 Year", "2 Years"]
 )
 
 current_year = datetime.now().year # date.today().year
@@ -115,13 +115,18 @@ def fetch_from_yahoo(ticker, start_date, end_date):
 
 def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
+        st.write("Mega cap selected")
         return df[df["MarketCap"] > 200]
-    if cap_choice == "Large-cap ($10B–$200B)":
+    elif cap_choice == "Large-cap ($10B–$200B)":
+        st.write("Large cap selected")
         return df[(df["MarketCap"] >= 10) & (df["MarketCap"] <= 200)]
-    if cap_choice == "Mid-cap ($2B–$10B)":
+    elif cap_choice == "Mid-cap ($2B–$10B)":
+        st.write("mid cap selected")
         return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
-    if cap_choice == "Small-cap ($300M–$2B)":
+    elif cap_choice == "Small-cap ($300M–$2B)":
+        st.write("small cap selected")
         return df[(df["MarketCap"] >= 0.3) & (df["MarketCap"] < 2)]
+    st.write("no market cap selected")
     return df
 
 # ✅ Load or update CSV per ticker
@@ -194,7 +199,8 @@ if run or force_refresh:
         st.stop()
 
     tickers_info = filter_market_cap(tickers_info, cap_choice).reset_index(drop=True)
-
+    tickers_info["MarketCap"] = pd.to_numeric(tickers_info["MarketCap"], errors="coerce")
+    
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
     end_date = date.today() + timedelta(days=1)
 
