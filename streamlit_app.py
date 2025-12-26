@@ -60,7 +60,7 @@ cap_choice = st.selectbox(
     "Market Cap",
     [    "All",
         "Mega-cap (> $200B)",
-        "Large-cap ($40B–$200B)",
+        "Large-cap ($10B–$200B)",
         "Mid-cap ($2B–$10B)",
         "Small-cap ($300M–$2B)"    ]
 )
