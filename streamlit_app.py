@@ -190,7 +190,6 @@ if run or force_refresh:
         st.session_state.price_data.clear()
         st.cache_data.clear()
 
-    st.write(193, market_choice)
     tickers_info = pd.read_excel("Tickers_Info.xlsx", sheet_name=market_choice)
     if "MarketCap" not in tickers_info.columns:
         st.error("Excel must contain a 'MarketCap' column")
