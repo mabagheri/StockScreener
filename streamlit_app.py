@@ -66,6 +66,7 @@ cap_choice = st.selectbox(
 )
 
 lookback_options = {
+    "1 day": datetime.today() - relativedelta(days=1),
     "1 Week": datetime.today() - relativedelta(days=7),
     "1 Month": datetime.today() - relativedelta(months=1),
     "6 Months": datetime.today() - relativedelta(months=6),
@@ -80,9 +81,9 @@ lookbacks_selected = st.multiselect(
 
 current_year = datetime.now().year # date.today().year
 start_year = st.selectbox(
-    "Start downloading data from year:",
+    "IF Needed: Start downloading historical data from Jan 1st of:",
     options=list(range(2000, current_year + 1)),
-    index=list(range(2000, current_year + 1)).index(2023)
+    index=list(range(2000, current_year + 1)).index(2024)
 )
 start_date = date(start_year, 1, 1)
 
