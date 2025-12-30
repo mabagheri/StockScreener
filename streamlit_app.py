@@ -220,17 +220,18 @@ if run or force_refresh:
 # 📊 RESULTS
 # ===============================
 if st.session_state.price_data:
-    try:
-        tk = yf.Ticker(ticker)
-        fi = tk.fast_info
-        mcap = round(fi.market_cap/1e9, 2)
-        # st.write(160, ticker, price, shares, mcap)            
-    except Exception as e:
-        st.error(f"tk.fast_info does not exist {e}")
-
+    
     results = []
 
     for ticker, df in st.session_state.price_data.items():
+        try:
+            tk = yf.Ticker(ticker)
+            fi = tk.fast_info
+            mcap = round(fi.market_cap/1e9, 2)
+            # st.write(160, ticker, price, shares, mcap)            
+        except Exception as e:
+            st.error(f"tk.fast_info does not exist {e}")
+
         row = {"Ticker": ticker, "MarketCap":mcap}
         row.update(
             compute_drops(
