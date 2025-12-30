@@ -107,6 +107,7 @@ def fetch_from_yahoo(ticker, start_date, end_date):
     df = yf.download(ticker, start=start_date, end=end_date, progress=False)
 
     if df.empty:
+        st.warning("110: No tickers match selection")
         return None
 
     df = df.reset_index()
@@ -147,7 +148,6 @@ def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
     # --- Already up to date ---
     if last_date >= end_date - timedelta(days=2):
         status_text.text(f"{ticker} data exists and is up-to-date : )") # ({i}/{len(tickers)})
-        st.write(last_date)
         return df_old
 
     # --- Download missing dates ---
@@ -214,6 +214,8 @@ if run or force_refresh:
 
             if df is not None:
                 st.session_state.price_data[ticker] = df
+            else:
+                st.write(f"218 {i}:{ticker}")
 
         progress.progress(i / len(tickers))
 
@@ -229,8 +231,9 @@ if st.session_state.price_data:
             tk = yf.Ticker(ticker)
             fi = tk.fast_info
             mcap = round(fi.market_cap/1e9, 2)
-            st.write(231, ticker, mcap)            
+            # st.write(231, ticker, mcap)            
         except Exception as e:
+            st.warning("No tickers match selection")
             st.error(f"tk.fast_info does not exist {e}")
 
         row = {"Ticker": ticker, "MarketCap":mcap}
