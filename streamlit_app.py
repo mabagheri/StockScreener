@@ -228,7 +228,7 @@ if st.session_state.price_data:
             tk = yf.Ticker(ticker)
             fi = tk.fast_info
             mcap = round(fi.market_cap/1e9, 2)
-            # st.write(160, ticker, price, shares, mcap)            
+            st.write(231, ticker, mcap)            
         except Exception as e:
             st.error(f"tk.fast_info does not exist {e}")
 
