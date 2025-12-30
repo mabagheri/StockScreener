@@ -32,7 +32,7 @@ EXCEL_FILE = "Tickers_Info.xlsx"
 # --------------------------------------------------
 # st.markdown("### Step 1: Choose Market & Filters")
 
-market_choice = st.radio("Choose Market:", ["TSX", "US"], horizontal=True)
+market_choice = st.radio("Choose Market:", ["TSX", "Nasdaq100", "S&P500"], horizontal=True)
 
 # ---------------- Check if the market is Open ----------------
 # ET = ZoneInfo("America/New_York")  # Eastern Time Python > 3.9 
@@ -101,7 +101,7 @@ if st.session_state.last_filters != filters:
 # =====================================================================
 # 🟦 DATA LAYER (CACHED)
 # =====================================================================
-# First, 
+# First, fetch data
 @st.cache_data(ttl=86400, show_spinner=False)
 def fetch_from_yahoo(ticker, start_date, end_date):
     df = yf.download(ticker, start=start_date, end=end_date, progress=False)
@@ -115,18 +115,18 @@ def fetch_from_yahoo(ticker, start_date, end_date):
 
 def filter_market_cap(df, cap_choice):
     if cap_choice == "Mega-cap (> $200B)":
-        st.write("Mega cap selected")
+        # st.write("Mega cap selected")
         return df[df["MarketCap"] > 200]
     elif cap_choice == "Large-cap ($10B–$200B)":
-        st.write("Large cap selected")
+        # st.write("Large cap selected")
         return df[(df["MarketCap"] >= 10) & (df["MarketCap"] <= 200)]
     elif cap_choice == "Mid-cap ($2B–$10B)":
-        st.write("mid cap selected")
+        # st.write("mid cap selected")
         return df[(df["MarketCap"] >= 2) & (df["MarketCap"] < 10)]
     elif cap_choice == "Small-cap ($300M–$2B)":
-        st.write("small cap selected")
+        # st.write("small cap selected")
         return df[(df["MarketCap"] >= 0.3) & (df["MarketCap"] < 2)]
-    st.write("no market cap selected")
+    # st.write("no market cap selected")
     return df
 
 # ✅ Load or update CSV per ticker
@@ -145,11 +145,13 @@ def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
     df_old = pd.read_csv(csv_path, parse_dates=["Date"])
     last_date = df_old["Date"].max().date()
     # --- Already up to date ---
-    if last_date >= end_date - timedelta(days=1):
+    if last_date >= end_date - timedelta(days=2):
+        status_text.text(f"{ticker} data exists and is up-to-date : )") # ({i}/{len(tickers)})
+        st.write(last_date)
         return df_old
 
     # --- Download missing dates ---
-    status_text.text(f"{ticker} data exists! Downloading the last unavailable few days ...") # ({i}/{len(tickers)})
+    status_text.text(f"Historical data exists for {ticker}; Fetching the last few days!") # ({i}/{len(tickers)})
     df_new = fetch_from_yahoo(ticker, last_date + timedelta(days=1), end_date)
 
     if df_new is None:
@@ -170,12 +172,7 @@ def compute_drops(df, lookbacks):
 
     for name, cutoff in lookbacks.items():
         recent = df[df["Date"] >= cutoff]
-        if name == "2 Years":
-            display_name = '2Yrs'
-        elif name == "1 Year":
-            display_name = '1Yr'
-        else:
-            display_name = name
+        display_name = name.replace(' Year', "Yr") if " Year" in name else name
         if recent.empty:
             out[f"Drop%: {display_name}"] = None
         else:
@@ -204,7 +201,7 @@ if run or force_refresh:
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
     end_date = date.today() + timedelta(days=1)
 
-    st.markdown("## Step 2: Loading price data")
+    st.markdown("### Loading price data")
 
     progress = st.progress(0)
     status_text = st.empty()
@@ -223,11 +220,18 @@ if run or force_refresh:
 # 📊 RESULTS
 # ===============================
 if st.session_state.price_data:
+    try:
+        tk = yf.Ticker(ticker)
+        fi = tk.fast_info
+        mcap = round(fi.market_cap/1e9, 2)
+        # st.write(160, ticker, price, shares, mcap)            
+    except Exception as e:
+        st.error(f"tk.fast_info does not exist {e}")
 
     results = []
 
     for ticker, df in st.session_state.price_data.items():
-        row = {"Ticker": ticker}
+        row = {"Ticker": ticker, "MarketCap":mcap}
         row.update(
             compute_drops(
                 df,
@@ -238,7 +242,7 @@ if st.session_state.price_data:
 
     df_results = pd.DataFrame(results)
 
-    st.markdown("## Step 3: Results")
+    st.markdown("### Results:")
 
     # if st.session_state.show_logos:
     #     tickers_info["Logo"] = tickers_info["Domain"].apply(
