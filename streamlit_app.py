@@ -182,6 +182,13 @@ def compute_drops(df, lookbacks):
 
     return out
 
+def todays_change_pct(df):
+    if len(df) < 2:
+        return None
+    today_close = df.iloc[-1]["Close"]
+    prev_close = df.iloc[-2]["Close"]
+    return round((today_close - prev_close) / prev_close * 100, 2)
+    
 # ===============================
 # ▶ RUN LOGIC
 # ===============================
@@ -236,7 +243,7 @@ if st.session_state.price_data:
             st.warning("No tickers match selection")
             st.error(f"tk.fast_info does not exist {e}")
 
-        row = {"Ticker": ticker, "MarketCap":mcap}
+        row = {"Ticker": ticker, "MarketCap":mcap, "Today %": todays_change_pct(df)}
         row.update(
             compute_drops(
                 df,
@@ -264,7 +271,13 @@ if st.session_state.price_data:
 # ===============================
 # 📦 ZIP DOWNLOAD
 # ===============================
-if st.session_state.price_data:
+download_toggle = st.radio(
+    "Download cached CSV files?",
+    options=["No", "Yes"],
+    horizontal=True,
+    index=0  # Default = No
+)
+if st.session_state.price_data and download_toggle == "Yes"::
 
     st.markdown("## 📦 Download cached CSVs")
 
