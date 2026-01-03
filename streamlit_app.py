@@ -277,7 +277,7 @@ download_toggle = st.radio(
     horizontal=True,
     index=0  # Default = No
 )
-if st.session_state.price_data and download_toggle == "Yes"::
+if st.session_state.price_data and download_toggle == "Yes":
 
     st.markdown("## 📦 Download cached CSVs")
 
