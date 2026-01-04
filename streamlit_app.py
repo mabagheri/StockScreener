@@ -134,6 +134,7 @@ def filter_market_cap(df, cap_choice):
 # ✅ Load or update CSV per ticker
 def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
     csv_path = os.path.join(DATA_FOLDER, f"{ticker}.csv")
+    st.write(csv_path)
 
     # --- Force refresh: ignore CSV ---
     if force_refresh or not os.path.exists(csv_path):
