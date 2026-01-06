@@ -134,7 +134,7 @@ def filter_market_cap(df, cap_choice):
 # ✅ Load or update CSV per ticker
 def load_or_update_csv(ticker, start_date, end_date, force_refresh=False):
     csv_path = os.path.join(DATA_FOLDER, market_choice  ,f"{ticker}.csv")
-    st.write(csv_path)
+    # st.write(csv_path)
 
     # --- Force refresh: ignore CSV ---
     if force_refresh or not os.path.exists(csv_path):
@@ -207,6 +207,8 @@ if run or force_refresh:
     tickers_info = filter_market_cap(tickers_info, cap_choice).reset_index(drop=True)
     tickers_info["MarketCap"] = pd.to_numeric(tickers_info["MarketCap"], errors="coerce")
     
+    marketcap_map = dict(zip(tickers_info["Ticker"], tickers_info["MarketCap"]))
+    
     tickers = tickers_info["Ticker"].dropna().unique().tolist()
     end_date = date.today() + timedelta(days=1)
 
@@ -235,16 +237,16 @@ if st.session_state.price_data:
     results = []
 
     for ticker, df in st.session_state.price_data.items():
-        try:
-            tk = yf.Ticker(ticker)
-            fi = tk.fast_info
-            mcap = round(fi.market_cap/1e9, 2)
+        # try:
+            # tk = yf.Ticker(ticker)
+            #fi = tk.fast_info
+            #mcap = round(fi.market_cap/1e9, 2)
             # st.write(231, ticker, mcap)            
-        except Exception as e:
-            st.warning("No tickers match selection")
-            st.error(f"tk.fast_info does not exist {e}")
+        #except Exception as e:
+            #st.warning("No tickers match selection")
+            #st.error(f"tk.fast_info does not exist {e}")
 
-        row = {"Ticker": ticker, "MarketCap":mcap, "Today %": todays_change_pct(df)}
+        row = {"Ticker": ticker, "MarketCap": round(marketcap_map.get(ticker, None), 2), "Today %": todays_change_pct(df)}
         row.update(
             compute_drops(
                 df,
